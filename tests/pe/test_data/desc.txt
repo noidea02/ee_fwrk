@@ -1,0 +1,39 @@
+========
+Name:
+    
+    peXY_exe_standard
+
+Relevant Imports:
+    
+    Kernel32.dll
+        Sleep
+
+    User32.dll
+        MessageBoxW
+
+    Ws2_32.dll
+        #3
+        #4
+        #23
+        #111
+        #115
+
+========
+Name:
+
+    peXY_dll_standard
+
+Relevant Imports:
+
+    Kernel32.dll
+        CloseHandle
+        CreateIoCompletionPort
+
+    ucrtbase.dll
+        strncpy
+
+Relevant Exports:
+
+    DsCreateIoCompletionPort
+    DsCloseHandle
+    DsConcatStrings

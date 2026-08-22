@@ -1,0 +1,11 @@
+function(ee_fwrk_add_tool target_name)
+    set(full_target_name ee_fwrk_tool_${target_name})
+    add_executable(${full_target_name} ${ARGN})
+    target_link_libraries(${full_target_name} PRIVATE ee_fwrk ee_fwrk_support)
+    set_target_properties(${full_target_name} PROPERTIES OUTPUT_NAME "${target_name}")
+    set_target_properties(${full_target_name} PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+endfunction()
+
+add_subdirectory(obfuscator)
+add_subdirectory(support)
+add_subdirectory(vex2hex)
