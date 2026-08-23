@@ -27,15 +27,14 @@ ee_x86 implements the x86 instruction decoder and formatter. As of today, the fo
 
 Other extensions such as AVX-512, AMX and APX are not supported (yet).
 
-ee_x86 is thread safe by default. Verification is done by using a proprietary structure-aware differential fuzzer, which uses MSDis (Microsoft Disassembler) as reference. Since MSDis does not support 16-bit mode,<br>
-only code paths related to 32 and 64-bit mode are subjected to fuzzing. The fuzzer is not included in this repository.
+ee_x86 is thread safe by default and grows the binary size by roughly 275 kb (decoder: 190 kb). Verification is done by using a proprietary structure-aware differential fuzzer, which uses MSDis (Microsoft Disassembler) as reference. Since MSDis does not support 16-bit mode, only code paths related to 32 and 64-bit mode are subjected to fuzzing.
 
 ee_x86 and fuzzer performance (16 threads):
 ```
-[000029E4] Consumed a total of 2.214.068.444 instructions (77% validity; 21.613.498.049 bytes) in 8 minutes
+[00007FD8] Consumed a total of 4.426.772.700 instructions (77% validity; 43.244.402.972 bytes) in 6 minutes
+[00007FD8] x86 instruction generator check has finished, press ENTER to exit
 ```
-
-Approximate binary growth when including the decoder and the formatter: 275 kb (decoder: 190 kb).
+The fuzzer is not part of this repository.
 
 &nbsp;
 
@@ -62,22 +61,25 @@ int main(int argc, char* argv[]) {
     ee_x86_disasm_output_t disasm_out{};
 
     // Decode instruction.
-    if(!ee_x86_disasm(EE_X86_MODE_64, instruction, sizeof(instruction), &disasm_out)) {
+    if (!ee_x86_disasm(EE_X86_MODE_64, instruction, sizeof(instruction), &disasm_out)) {
         return 1; // Invalid instruction encoding.
     }
 
     // Inspect raw decoder output.
-    if(disasm_out.instruction == EE_X86_INSTRUCTION_CMPXCHG && disasm_out.num_operands == 2) {
+    std::cout << disasm_out.num_instruction_bytes << " bytes have been decoded" << std::endl;
+
+    // Inspect output further if needed.
+    if (disasm_out.instruction == EE_X86_INSTRUCTION_CMPXCHG && disasm_out.num_operands == 2) {
         // ...
     }
 
-    // Format instruction.
+    // Format decoder output.
     ee_uint64_t instruction_address{ 0x7ff000000000 };
     ee_ascii_char_t instruction_str[256]{};
     ee_size_t instruction_str_size{ sizeof(instruction_str) - 1 };
 
-    if(!ee_x86_format(EE_X86_MODE_64, instruction_address, &disasm_out, instruction_str, &instruction_str_size)) {
-        return 1; // Something went wrong, maybe the string buffer is too small.
+    if (!ee_x86_format(EE_X86_MODE_64, instruction_address, &disasm_out, instruction_str, &instruction_str_size)) {
+        return 1; // Something went wrong, the string buffer may be too small.
     }
 
     std::cout << instruction_str << std::endl;

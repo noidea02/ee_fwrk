@@ -47,7 +47,7 @@ Exemplatory usages:
 
 #define DISASM_BASE_ADDRESS16 0x7F00
 #define DISASM_BASE_ADDRESS32 0x7FFF0000
-#define DISASM_BASE_ADDRESS64 0x7FFFFFFFFFFF0000
+#define DISASM_BASE_ADDRESS64 0x7FFFFFFF00000000
 
 static ee_bool_t lookup_mode(const char* str, ee_x86_mode_t* type);
 static ee_bool_t hex_char_to_nibble(char chr, ee_byte_t* nibble);
