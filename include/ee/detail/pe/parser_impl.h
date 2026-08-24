@@ -17,7 +17,7 @@ EE_STATIC_ASSERT(sizeof(ee_prv_pe_section_header_t) == EE_PRV_PE_SIZE_SECTION_HE
 EE_STATIC_ASSERT(sizeof(ee_prv_pe_import_directory_entry_t) == EE_PRV_PE_SIZE_IMPORT_DIRECTORY_ENTRY, pe_import_dir_entry_size_mismatch);
 EE_STATIC_ASSERT(sizeof(ee_prv_pe_export_directory_entry_t) == EE_PRV_PE_SIZE_EXPORT_DIRECTORY_ENTRY, pe_export_dir_entry_size_mismatch);
 
-void ee_prv_pe_free_symbols(ee_pe_symbol_info_t* symbols, ee_size_t num_symbols, ee_free_t free) {
+static void ee_prv_pe_free_symbols(ee_pe_symbol_info_t* symbols, ee_size_t num_symbols, ee_free_t free) {
 
     ee_size_t index = 0;
 
@@ -37,7 +37,7 @@ void ee_prv_pe_free_symbols(ee_pe_symbol_info_t* symbols, ee_size_t num_symbols,
     free(symbols);
 }
 
-void ee_prv_pe_free_imports(ee_pe_import_info_t* imports, ee_size_t num_imports, ee_free_t free) {
+static void ee_prv_pe_free_imports(ee_pe_import_info_t* imports, ee_size_t num_imports, ee_free_t free) {
 
     ee_size_t index = 0;
 
@@ -57,7 +57,7 @@ void ee_prv_pe_free_imports(ee_pe_import_info_t* imports, ee_size_t num_imports,
     free(imports);
 }
 
-void ee_prv_pe_rii_state_free_fields(const ee_prv_pe_rii_state_t* state) {
+static void ee_prv_pe_rii_state_free_fields(const ee_prv_pe_rii_state_t* state) {
 
     const ee_pe_rii_callbacks_t* cbs = state->callbacks;
 
@@ -71,7 +71,7 @@ void ee_prv_pe_rii_state_free_fields(const ee_prv_pe_rii_state_t* state) {
         ee_prv_pe_free_symbols(state->exports, state->num_exports, cbs->free);
 }
 
-ee_pe_error_t ee_prv_pe_rii_state_read_coff_file_header(ee_prv_pe_rii_state_t* state) {
+static ee_pe_error_t ee_prv_pe_rii_state_read_coff_file_header(ee_prv_pe_rii_state_t* state) {
 
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
     const ee_read_data_wrapper_t* const read_data = &cbs->read_data;
@@ -98,7 +98,7 @@ ee_pe_error_t ee_prv_pe_rii_state_read_coff_file_header(ee_prv_pe_rii_state_t* s
     return EE_PE_SUCCESS;
 }
 
-void ee_prv_pe_convert_optional_header_to_unified_optional_header(const ee_prv_pe_optional_header_t* opt_header, ee_prv_pe_unified_optional_header_t* unified_opt_header) {
+static void ee_prv_pe_convert_optional_header_to_unified_optional_header(const ee_prv_pe_optional_header_t* opt_header, ee_prv_pe_unified_optional_header_t* unified_opt_header) {
 
     unified_opt_header->is_pe_plus_header = EE_FALSE;
 
@@ -135,7 +135,7 @@ void ee_prv_pe_convert_optional_header_to_unified_optional_header(const ee_prv_p
     ee_memcpy(unified_opt_header->data_dirs, opt_header->data_dirs, sizeof(unified_opt_header->data_dirs));
 }
 
-void ee_prv_pe_convert_optional_header_plus_to_unified_optional_header(const ee_prv_pe_optional_header_plus_t* opt_header, ee_prv_pe_unified_optional_header_t* unified_opt_header) {
+static void ee_prv_pe_convert_optional_header_plus_to_unified_optional_header(const ee_prv_pe_optional_header_plus_t* opt_header, ee_prv_pe_unified_optional_header_t* unified_opt_header) {
 
     unified_opt_header->is_pe_plus_header = EE_TRUE;
 
@@ -172,7 +172,7 @@ void ee_prv_pe_convert_optional_header_plus_to_unified_optional_header(const ee_
     ee_memcpy(unified_opt_header->data_dirs, opt_header->data_dirs, sizeof(unified_opt_header->data_dirs));
 }
 
-ee_pe_error_t ee_prv_pe_rii_state_read_optional_header(ee_prv_pe_rii_state_t* state) {
+static ee_pe_error_t ee_prv_pe_rii_state_read_optional_header(ee_prv_pe_rii_state_t* state) {
 
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
     const ee_read_data_wrapper_t* const read_data = &cbs->read_data;
@@ -212,7 +212,7 @@ ee_pe_error_t ee_prv_pe_rii_state_read_optional_header(ee_prv_pe_rii_state_t* st
     return EE_PE_SUCCESS;
 }
 
-const ee_prv_pe_data_dir_t* ee_prv_pe_rii_state_get_data_dir(ee_prv_pe_rii_state_t* state, ee_prv_pe_data_dir_index_t index) {
+static const ee_prv_pe_data_dir_t* ee_prv_pe_rii_state_get_data_dir(ee_prv_pe_rii_state_t* state, ee_prv_pe_data_dir_index_t index) {
 
     const ee_size_t index_val = (ee_size_t)index;
 
@@ -222,7 +222,7 @@ const ee_prv_pe_data_dir_t* ee_prv_pe_rii_state_get_data_dir(ee_prv_pe_rii_state
     return &state->opt_header.data_dirs[index_val];
 }
 
-ee_pe_error_t ee_prv_pe_rii_state_read_section_table(ee_prv_pe_rii_state_t* state) {
+static ee_pe_error_t ee_prv_pe_rii_state_read_section_table(ee_prv_pe_rii_state_t* state) {
 
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
     const ee_read_data_wrapper_t* const read_data = &cbs->read_data;
@@ -243,7 +243,7 @@ ee_pe_error_t ee_prv_pe_rii_state_read_section_table(ee_prv_pe_rii_state_t* stat
     return EE_PE_SUCCESS;
 }
 
-ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_data_dir(const ee_prv_pe_rii_state_t* state, const ee_prv_pe_data_dir_t* data_dir, ee_pe_section_info_t* section_info) {
+static ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_data_dir(const ee_prv_pe_rii_state_t* state, const ee_prv_pe_data_dir_t* data_dir, ee_pe_section_info_t* section_info) {
 
     ee_size_t hdr_index = 0;
     for (; hdr_index != state->num_section_headers; ++hdr_index) {
@@ -271,7 +271,7 @@ ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_data_dir(const ee_prv_pe_ri
     return EE_FALSE;
 }
 
-ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_data_dir_index(const ee_prv_pe_rii_state_t* state, ee_prv_pe_data_dir_index_t data_dir_index, ee_pe_section_info_t* section_info) {
+static ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_data_dir_index(const ee_prv_pe_rii_state_t* state, ee_prv_pe_data_dir_index_t data_dir_index, ee_pe_section_info_t* section_info) {
 
     const ee_size_t index_val = (ee_size_t)data_dir_index;
     const ee_prv_pe_data_dir_t* data_dir = 0;
@@ -283,7 +283,7 @@ ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_data_dir_index(const ee_prv
     return ee_prv_pe_rii_state_lookup_section_info_by_data_dir(state, data_dir, section_info);
 }
 
-ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_section_name(const ee_prv_pe_rii_state_t* state, const ee_ascii_char_t* name, ee_pe_section_info_t* section_info) {
+static ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_section_name(const ee_prv_pe_rii_state_t* state, const ee_ascii_char_t* name, ee_pe_section_info_t* section_info) {
 
     ee_size_t hdr_index = 0;
     for (; hdr_index != state->num_section_headers; ++hdr_index) {
@@ -303,7 +303,7 @@ ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_section_name(const ee_prv_p
     return EE_FALSE;
 }
 
-void ee_prv_pe_rii_state_collect_section_info(ee_prv_pe_rii_state_t* state) {
+static void ee_prv_pe_rii_state_collect_section_info(ee_prv_pe_rii_state_t* state) {
 
     ee_bool_t idata_found = EE_FALSE;
     ee_bool_t edata_found = EE_FALSE;
@@ -337,7 +337,7 @@ void ee_prv_pe_rii_state_collect_section_info(ee_prv_pe_rii_state_t* state) {
         state->edata_section_info = section_info;
 }
 
-ee_bool_t ee_prv_pe_rii_state_lookup_fp_by_rva(ee_prv_pe_rii_state_t* state, ee_uint32_t rva, ee_uint32_t* fp) {
+static ee_bool_t ee_prv_pe_rii_state_lookup_fp_by_rva(ee_prv_pe_rii_state_t* state, ee_uint32_t rva, ee_uint32_t* fp) {
 
     ee_size_t hdr_index = 0;
     for (; hdr_index != state->num_section_headers; ++hdr_index) {
@@ -359,7 +359,7 @@ ee_bool_t ee_prv_pe_rii_state_lookup_fp_by_rva(ee_prv_pe_rii_state_t* state, ee_
     return EE_FALSE;
 }
 
-ee_int32_t ee_prv_pe_strlen_with_limit(const ee_ascii_char_t* str, ee_size_t str_size) {
+static ee_int32_t ee_prv_pe_strlen_with_limit(const ee_ascii_char_t* str, ee_size_t str_size) {
 
     ee_size_t char_index = 0;
 
@@ -375,7 +375,7 @@ ee_int32_t ee_prv_pe_strlen_with_limit(const ee_ascii_char_t* str, ee_size_t str
     return -1;
 }
 
-ee_pe_error_t ee_prv_pe_read_string(const ee_read_data_wrapper_t* read_data, ee_uint32_t fp, ee_ascii_char_t* str, ee_size_t str_size) {
+static ee_pe_error_t ee_prv_pe_read_string(const ee_read_data_wrapper_t* read_data, ee_uint32_t fp, ee_ascii_char_t* str, ee_size_t str_size) {
 
     ee_uint32_t cur_fp = fp;
     ee_ascii_char_t str_chunk[64] = { 0 };
@@ -419,11 +419,11 @@ ee_pe_error_t ee_prv_pe_read_string(const ee_read_data_wrapper_t* read_data, ee_
     return EE_PE_PREDEFINED_LIMIT_REACHED;
 }
 
-ee_bool_t ee_prv_pe_section_info_is_valid(const ee_pe_section_info_t* info) {
+static ee_bool_t ee_prv_pe_section_info_is_valid(const ee_pe_section_info_t* info) {
     return info && info->raw_size;
 }
 
-ee_pe_error_t ee_prv_pe_rii_state_collect_imported_symbol_info(ee_prv_pe_rii_state_t* state, const ee_prv_pe_imported_dll_info_t* dll_info, const ee_prv_pe_import_lookup_table_entry_info_t* ilt_entry_info, ee_pe_symbol_info_t* out) {
+static ee_pe_error_t ee_prv_pe_rii_state_collect_imported_symbol_info(ee_prv_pe_rii_state_t* state, const ee_prv_pe_imported_dll_info_t* dll_info, const ee_prv_pe_import_lookup_table_entry_info_t* ilt_entry_info, ee_pe_symbol_info_t* out) {
 
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
     const ee_read_data_wrapper_t* const read_data = &cbs->read_data;
@@ -482,7 +482,7 @@ ee_pe_error_t ee_prv_pe_rii_state_collect_imported_symbol_info(ee_prv_pe_rii_sta
     return EE_PE_SUCCESS;
 }
 
-ee_pe_error_t ee_prv_pe_rii_state_collect_imports_from_entry(ee_prv_pe_rii_state_t* state, const ee_prv_pe_import_directory_entry_t* entry, ee_pe_import_info_t* out) {
+static ee_pe_error_t ee_prv_pe_rii_state_collect_imports_from_entry(ee_prv_pe_rii_state_t* state, const ee_prv_pe_import_directory_entry_t* entry, ee_pe_import_info_t* out) {
 
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
     const ee_read_data_wrapper_t* const read_data = &cbs->read_data;
@@ -580,7 +580,7 @@ ee_pe_error_t ee_prv_pe_rii_state_collect_imports_from_entry(ee_prv_pe_rii_state
     return EE_PE_SUCCESS;
 }
 
-ee_pe_error_t ee_prv_pe_rii_state_collect_imports(ee_prv_pe_rii_state_t* state) {
+static ee_pe_error_t ee_prv_pe_rii_state_collect_imports(ee_prv_pe_rii_state_t* state) {
 
     const ee_pe_section_info_t* const idata = &state->idata_section_info;
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
@@ -640,7 +640,7 @@ ee_pe_error_t ee_prv_pe_rii_state_collect_imports(ee_prv_pe_rii_state_t* state) 
     return EE_PE_SUCCESS;
 }
 
-ee_pe_error_t ee_prv_pe_rii_state_collect_exported_symbol_info(ee_prv_pe_rii_state_t* state, const ee_prv_pe_export_directory_info_t* export_dir_info, ee_size_t symbol_index, ee_pe_symbol_info_t* out) {
+static ee_pe_error_t ee_prv_pe_rii_state_collect_exported_symbol_info(ee_prv_pe_rii_state_t* state, const ee_prv_pe_export_directory_info_t* export_dir_info, ee_size_t symbol_index, ee_pe_symbol_info_t* out) {
 
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
     const ee_read_data_wrapper_t* const read_data = &cbs->read_data;
@@ -728,7 +728,7 @@ ee_pe_error_t ee_prv_pe_rii_state_collect_exported_symbol_info(ee_prv_pe_rii_sta
     return EE_PE_SUCCESS;
 }
 
-ee_pe_error_t ee_prv_pe_rii_state_collect_exports(ee_prv_pe_rii_state_t* state) {
+static ee_pe_error_t ee_prv_pe_rii_state_collect_exports(ee_prv_pe_rii_state_t* state) {
 
     const ee_pe_section_info_t* const edata = &state->edata_section_info;
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
@@ -780,7 +780,7 @@ ee_pe_error_t ee_prv_pe_rii_state_collect_exports(ee_prv_pe_rii_state_t* state) 
     return EE_PE_SUCCESS;
 }
 
-ee_pe_machine_type_t ee_prv_pe_raw_machine_value_to_machine_type(ee_uint16_t val) {
+static ee_pe_machine_type_t ee_prv_pe_raw_machine_value_to_machine_type(ee_uint16_t val) {
 
     switch (val) {
     case EE_PRV_PE_MACHINE_I386: return EE_PE_MACHINE_I386;

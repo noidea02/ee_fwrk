@@ -6,14 +6,15 @@
 #endif
 
 #include "ee/detail/x86/constants.h"
-#include "ee/detail/x86/modrm_tables.h"
-#include "ee/detail/x86/opcode_tables.h"
+#include "ee/detail/x86/instruction_pseudonyms_impl.h"
+#include "ee/detail/x86/modrm_tables_impl.h"
+#include "ee/detail/x86/opcode_tables_impl.h"
 #include "ee/detail/x86/state_machine.h"
 
 EE_STATIC_ASSERT(EE_GET_TDEF_STRUCT_FIELD_LEN(ee_x86_disasm_output_t, prefixes) == EE_GET_TDEF_STRUCT_FIELD_LEN(ee_prv_x86_state_t, final_prefixes), size_mismatch_for_external_and_internal_ee_x86_prefix_fields);
 EE_STATIC_ASSERT(EE_GET_TDEF_STRUCT_FIELD_LEN(ee_x86_disasm_output_t, operands) == EE_GET_TDEF_STRUCT_FIELD_LEN(ee_prv_x86_state_t, operands), size_mismatch_for_external_and_internal_ee_x86_operand_fields);
 
-ee_bool_t ee_prv_x86_state_get_current_byte(const ee_prv_x86_state_t* distate, ee_byte_t* cur_byte) {
+static ee_bool_t ee_prv_x86_state_get_current_byte(const ee_prv_x86_state_t* distate, ee_byte_t* cur_byte) {
 
     if (distate->byte_index >= distate->num_bytes)
         return EE_FALSE;
@@ -23,7 +24,7 @@ ee_bool_t ee_prv_x86_state_get_current_byte(const ee_prv_x86_state_t* distate, e
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_get_next_byte(const ee_prv_x86_state_t* distate, ee_byte_t* next_byte) {
+static ee_bool_t ee_prv_x86_state_get_next_byte(const ee_prv_x86_state_t* distate, ee_byte_t* next_byte) {
 
     const ee_size_t next_index = distate->byte_index + 1;
     if (next_index >= distate->num_bytes)
@@ -34,7 +35,7 @@ ee_bool_t ee_prv_x86_state_get_next_byte(const ee_prv_x86_state_t* distate, ee_b
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_advance_bytes(ee_prv_x86_state_t* distate, ee_byte_t* old_byte) {
+static ee_bool_t ee_prv_x86_state_advance_bytes(ee_prv_x86_state_t* distate, ee_byte_t* old_byte) {
 
     if (!ee_prv_x86_state_get_current_byte(distate, old_byte))
         return EE_FALSE;
@@ -44,7 +45,7 @@ ee_bool_t ee_prv_x86_state_advance_bytes(ee_prv_x86_state_t* distate, ee_byte_t*
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_just_advance_bytes(ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_just_advance_bytes(ee_prv_x86_state_t* distate) {
 
     if (distate->byte_index >= distate->num_bytes)
         return EE_FALSE;
@@ -54,7 +55,7 @@ ee_bool_t ee_prv_x86_state_just_advance_bytes(ee_prv_x86_state_t* distate) {
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_advance_and_get_current_byte(ee_prv_x86_state_t* distate, ee_byte_t* cur_byte) {
+static ee_bool_t ee_prv_x86_state_advance_and_get_current_byte(ee_prv_x86_state_t* distate, ee_byte_t* cur_byte) {
 
     if (!ee_prv_x86_state_just_advance_bytes(distate) || !ee_prv_x86_state_get_current_byte(distate, cur_byte))
         return EE_FALSE;
@@ -62,15 +63,15 @@ ee_bool_t ee_prv_x86_state_advance_and_get_current_byte(ee_prv_x86_state_t* dist
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_is_16_bit_mode_active(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_is_16_bit_mode_active(const ee_prv_x86_state_t* distate) {
     return distate->active_mode == EE_X86_MODE_16;
 }
 
-ee_bool_t ee_prv_x86_state_is_64_bit_mode_active(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_is_64_bit_mode_active(const ee_prv_x86_state_t* distate) {
     return distate->active_mode == EE_X86_MODE_64;
 }
 
-ee_bool_t ee_prv_x86_state_has_active_operand_size_override(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_has_active_operand_size_override(const ee_prv_x86_state_t* distate) {
 
     const ee_size_t aso_index = 2;
     if (aso_index >= EE_GET_ARRAY_LEN(distate->active_prefixes.grp_prefixes))
@@ -79,7 +80,7 @@ ee_bool_t ee_prv_x86_state_has_active_operand_size_override(const ee_prv_x86_sta
     return distate->active_prefixes.grp_prefixes[aso_index] == EE_PRV_X86_GRP3_PREFIX_OPD_SIZE_OVR;
 }
 
-ee_bool_t ee_prv_x86_state_has_active_address_size_override(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_has_active_address_size_override(const ee_prv_x86_state_t* distate) {
 
     const ee_size_t aso_index = 3;
     if (aso_index >= EE_GET_ARRAY_LEN(distate->active_prefixes.grp_prefixes))
@@ -88,7 +89,7 @@ ee_bool_t ee_prv_x86_state_has_active_address_size_override(const ee_prv_x86_sta
     return distate->active_prefixes.grp_prefixes[aso_index] == EE_PRV_X86_GRP4_PREFIX_ADR_SIZE_OVR;
 }
 
-ee_bool_t ee_prv_x86_state_dissect_active_vex_prefix(const ee_prv_x86_state_t* distate, ee_uint8_t* normalized_rxbwl_bits, ee_uint8_t* normalized_reg_spec) {
+static ee_bool_t ee_prv_x86_state_dissect_active_vex_prefix(const ee_prv_x86_state_t* distate, ee_uint8_t* normalized_rxbwl_bits, ee_uint8_t* normalized_reg_spec) {
 
     if (distate->active_prefixes.num_vex_core_bytes == 1) {
 
@@ -124,7 +125,7 @@ ee_bool_t ee_prv_x86_state_dissect_active_vex_prefix(const ee_prv_x86_state_t* d
     return EE_FALSE;
 }
 
-ee_bool_t ee_prv_x86_state_has_active_rex_w(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_has_active_rex_w(const ee_prv_x86_state_t* distate) {
 
     ee_uint8_t vex_rxbwl = 0;
     ee_uint8_t ignored_vex_reg_spec = 0;
@@ -141,12 +142,12 @@ ee_bool_t ee_prv_x86_state_has_active_rex_w(const ee_prv_x86_state_t* distate) {
     return EE_FALSE;
 }
 
-ee_bool_t ee_prv_x86_state_has_active_vex_prefix(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_has_active_vex_prefix(const ee_prv_x86_state_t* distate) {
 
     return distate->active_prefixes.num_vex_core_bytes > 0;
 }
 
-ee_bool_t ee_prv_x86_state_is_vex_vvvv_set(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_is_vex_vvvv_set(const ee_prv_x86_state_t* distate) {
 
     ee_uint8_t raw_vvvv_bits = 0;
 
@@ -164,7 +165,7 @@ ee_bool_t ee_prv_x86_state_is_vex_vvvv_set(const ee_prv_x86_state_t* distate) {
     return (raw_vvvv_bits != 0x0F) ? EE_TRUE : EE_FALSE;
 }
 
-ee_bool_t ee_prv_x86_state_hints_at_16_bit_operand_usage(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_hints_at_16_bit_operand_usage(const ee_prv_x86_state_t* distate) {
 
     const ee_bool_t mode_16 = ee_prv_x86_state_is_16_bit_mode_active(distate);
     const ee_bool_t has_opd_size_override = ee_prv_x86_state_has_active_operand_size_override(distate);
@@ -172,7 +173,7 @@ ee_bool_t ee_prv_x86_state_hints_at_16_bit_operand_usage(const ee_prv_x86_state_
     return (mode_16 && !has_opd_size_override) || (!mode_16 && has_opd_size_override);
 }
 
-ee_bool_t ee_prv_x86_state_hints_at_16_bit_address_usage(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_hints_at_16_bit_address_usage(const ee_prv_x86_state_t* distate) {
 
     const ee_bool_t mode_16 = ee_prv_x86_state_is_16_bit_mode_active(distate);
     const ee_bool_t has_addr_size_override = ee_prv_x86_state_has_active_address_size_override(distate);
@@ -180,12 +181,12 @@ ee_bool_t ee_prv_x86_state_hints_at_16_bit_address_usage(const ee_prv_x86_state_
     return (mode_16 && !has_addr_size_override) || (!mode_16 && has_addr_size_override);
 }
 
-ee_bool_t ee_prv_x86_state_must_use_modrm16_table(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_must_use_modrm16_table(const ee_prv_x86_state_t* distate) {
 
     return !ee_prv_x86_state_is_64_bit_mode_active(distate) && ee_prv_x86_state_hints_at_16_bit_address_usage(distate);
 }
 
-const ee_prv_x86_modrm_mapping_t* ee_prv_x86_state_get_modrm_mapping(ee_prv_x86_state_t* distate) {
+static const ee_prv_x86_modrm_mapping_t* ee_prv_x86_state_get_modrm_mapping(ee_prv_x86_state_t* distate) {
 
     ee_byte_t modrm_byte = 0;
     const ee_prv_x86_modrm_mapping_t* result = 0;
@@ -195,14 +196,14 @@ const ee_prv_x86_modrm_mapping_t* ee_prv_x86_state_get_modrm_mapping(ee_prv_x86_
 
     if (ee_prv_x86_state_must_use_modrm16_table(distate)) {
 
-        if (modrm_byte >= EE_PRV_X86_MODRM16_TABLE_COUNT)
+        if (modrm_byte >= EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM16_TABLE))
             return 0;
 
         result = &EE_PRV_X86_MODRM16_TABLE[modrm_byte];
     }
     else {
 
-        if (modrm_byte >= EE_PRV_X86_MODRM32_TABLE_COUNT)
+        if (modrm_byte >= EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM32_TABLE))
             return 0;
 
         result = &EE_PRV_X86_MODRM32_TABLE[modrm_byte];
@@ -211,7 +212,7 @@ const ee_prv_x86_modrm_mapping_t* ee_prv_x86_state_get_modrm_mapping(ee_prv_x86_
     return result;
 }
 
-const ee_prv_x86_modrm32_sib_mapping_t* ee_prv_x86_state_get_modrm32_sib_mapping(ee_prv_x86_state_t* distate, ee_bool_t requires_vsib) {
+static const ee_prv_x86_modrm32_sib_mapping_t* ee_prv_x86_state_get_modrm32_sib_mapping(ee_prv_x86_state_t* distate, ee_bool_t requires_vsib) {
 
     ee_byte_t sib = 0;
     ee_size_t table_count = 0;
@@ -222,12 +223,12 @@ const ee_prv_x86_modrm32_sib_mapping_t* ee_prv_x86_state_get_modrm32_sib_mapping
 
     if (requires_vsib) {
 
-        table_count = EE_PRV_X86_MODRM32_VSIB_TABLE_COUNT;
+        table_count = EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM32_VSIB_TABLE);
         table = EE_PRV_X86_MODRM32_VSIB_TABLE;
     }
     else {
 
-        table_count = EE_PRV_X86_MODRM32_SIB_TABLE_COUNT;
+        table_count = EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM32_SIB_TABLE);
         table = EE_PRV_X86_MODRM32_SIB_TABLE;
     }
 
@@ -237,7 +238,7 @@ const ee_prv_x86_modrm32_sib_mapping_t* ee_prv_x86_state_get_modrm32_sib_mapping
     return &table[sib];
 }
 
-ee_bool_t ee_prv_x86_prefix_state_are_rex_fields_set(const ee_prv_x86_prefix_state_t* ps, ee_uint8_t bits) {
+static ee_bool_t ee_prv_x86_prefix_state_are_rex_fields_set(const ee_prv_x86_prefix_state_t* ps, ee_uint8_t bits) {
 
     if (!bits)
         return EE_FALSE;
@@ -277,7 +278,7 @@ ee_bool_t ee_prv_x86_prefix_state_are_rex_fields_set(const ee_prv_x86_prefix_sta
     return EE_FALSE;
 }
 
-ee_bool_t ee_prv_x86_state_consume_modrm_sib(ee_prv_x86_state_t* distate, ee_bool_t requires_vsib, ee_prv_x86_modrm_resolved_effective_address_t* in_out_eff_addr) {
+static ee_bool_t ee_prv_x86_state_consume_modrm_sib(ee_prv_x86_state_t* distate, ee_bool_t requires_vsib, ee_prv_x86_modrm_resolved_effective_address_t* in_out_eff_addr) {
 
     const ee_prv_x86_modrm32_sib_mapping_t* const sib_mapping = ee_prv_x86_state_get_modrm32_sib_mapping(distate, requires_vsib);
     if (!sib_mapping)
@@ -309,7 +310,7 @@ ee_bool_t ee_prv_x86_state_consume_modrm_sib(ee_prv_x86_state_t* distate, ee_boo
     return EE_TRUE;
 }
 
-ee_int64_t ee_prv_x86_apply_sign_extension(ee_int64_t in, ee_size_t in_size_bits) {
+static ee_int64_t ee_prv_x86_apply_sign_extension(ee_int64_t in, ee_size_t in_size_bits) {
 
     ee_int64_t out = in;
 
@@ -337,7 +338,7 @@ ee_int64_t ee_prv_x86_apply_sign_extension(ee_int64_t in, ee_size_t in_size_bits
     return out;
 }
 
-ee_bool_t ee_prv_x86_state_consume_immediate_bytes(ee_prv_x86_state_t* distate, ee_size_t num_bits, ee_int64_t* immb) {
+static ee_bool_t ee_prv_x86_state_consume_immediate_bytes(ee_prv_x86_state_t* distate, ee_size_t num_bits, ee_int64_t* immb) {
 
     const ee_size_t num_bytes = num_bits / 8;
 
@@ -370,12 +371,12 @@ ee_bool_t ee_prv_x86_state_consume_immediate_bytes(ee_prv_x86_state_t* distate, 
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_consume_displacement(ee_prv_x86_state_t* distate, ee_size_t num_bits, ee_int64_t* disp) {
+static ee_bool_t ee_prv_x86_state_consume_displacement(ee_prv_x86_state_t* distate, ee_size_t num_bits, ee_int64_t* disp) {
 
     return ee_prv_x86_state_consume_immediate_bytes(distate, num_bits, disp);
 }
 
-ee_bool_t ee_prv_x86_state_consume_modrm_byte(ee_prv_x86_state_t* distate, ee_bool_t requires_vsib, ee_prv_x86_modrm_resolved_effective_address_t* out_eff_addr, const ee_prv_x86_modrm_reg_pack_t** out_reg) {
+static ee_bool_t ee_prv_x86_state_consume_modrm_byte(ee_prv_x86_state_t* distate, ee_bool_t requires_vsib, ee_prv_x86_modrm_resolved_effective_address_t* out_eff_addr, const ee_prv_x86_modrm_reg_pack_t** out_reg) {
 
     const ee_prv_x86_modrm_mapping_t* const modrm_mapping = ee_prv_x86_state_get_modrm_mapping(distate);
     ee_bool_t sib_consumed = EE_FALSE;
@@ -454,7 +455,7 @@ ee_bool_t ee_prv_x86_state_consume_modrm_byte(ee_prv_x86_state_t* distate, ee_bo
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_consume_plusi_register_code(const ee_prv_x86_state_t* distate, ee_byte_t* reg_code) {
+static ee_bool_t ee_prv_x86_state_consume_plusi_register_code(const ee_prv_x86_state_t* distate, ee_byte_t* reg_code) {
 
     ee_size_t last_opcode_index = 0;
     ee_byte_t last_opcode_byte = 0;
@@ -472,7 +473,7 @@ ee_bool_t ee_prv_x86_state_consume_plusi_register_code(const ee_prv_x86_state_t*
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_consume_plusr_register_code(const ee_prv_x86_state_t* distate, const ee_prv_x86_modrm_reg_pack_t** reg_pack) {
+static ee_bool_t ee_prv_x86_state_consume_plusr_register_code(const ee_prv_x86_state_t* distate, const ee_prv_x86_modrm_reg_pack_t** reg_pack) {
 
     ee_size_t last_opcode_index = 0;
     ee_byte_t last_opcode_byte = 0;
@@ -488,14 +489,14 @@ ee_bool_t ee_prv_x86_state_consume_plusr_register_code(const ee_prv_x86_state_t*
     last_opcode_byte = distate->bytes[last_opcode_index];
     register_code = last_opcode_byte & 7;
 
-    if (register_code >= EE_PRV_X86_MODRM_REG_PACKS_COUNT)
+    if (register_code >= EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM_REG_PACKS))
         return EE_FALSE;
 
     *reg_pack = EE_PRV_X86_MODRM_REG_PACKS[register_code];
     return EE_TRUE;
 }
 
-ee_x86_segment_register_type_t ee_prv_x86_prefix_state_to_segment_register(const ee_prv_x86_prefix_state_t* ps) {
+static ee_x86_segment_register_type_t ee_prv_x86_prefix_state_to_segment_register(const ee_prv_x86_prefix_state_t* ps) {
 
     const ee_byte_t segreg_prefix_byte = ps->grp_prefixes[1];
 
@@ -529,7 +530,7 @@ ee_x86_segment_register_type_t ee_prv_x86_prefix_state_to_segment_register(const
     return EE_X86_SEGMENT_REGISTER_NOT_EXISTING;
 }
 
-ee_x86_gpp_register_type_t ee_prv_x86_modrm_reg_pack_to_gpp_register(const ee_prv_x86_modrm_reg_pack_t* rp, ee_size_t bits) {
+static ee_x86_gpp_register_type_t ee_prv_x86_modrm_reg_pack_to_gpp_register(const ee_prv_x86_modrm_reg_pack_t* rp, ee_size_t bits) {
 
     if (!rp)
         return EE_X86_GPP_REGISTER_NOT_EXISTING;
@@ -556,7 +557,7 @@ ee_x86_gpp_register_type_t ee_prv_x86_modrm_reg_pack_to_gpp_register(const ee_pr
     return EE_X86_GPP_REGISTER_NOT_EXISTING;
 }
 
-ee_x86_segment_register_type_t ee_prv_x86_modrm_reg_pack_to_segment_register(const ee_prv_x86_modrm_reg_pack_t* rp) {
+static ee_x86_segment_register_type_t ee_prv_x86_modrm_reg_pack_to_segment_register(const ee_prv_x86_modrm_reg_pack_t* rp) {
 
     if (!rp)
         return EE_X86_SEGMENT_REGISTER_NOT_EXISTING;
@@ -573,7 +574,7 @@ ee_x86_segment_register_type_t ee_prv_x86_modrm_reg_pack_to_segment_register(con
     return EE_X86_SEGMENT_REGISTER_NOT_EXISTING;
 }
 
-ee_bool_t ee_prv_x86_state_transform_modrm_ptr_base_reg_to_ptr_operand_reg(const ee_prv_x86_state_t* distate, const ee_prv_x86_modrm_reg_pack_t* ptr_reg, ee_x86_pointer_operand_base_register_t* out) {
+static ee_bool_t ee_prv_x86_state_transform_modrm_ptr_base_reg_to_ptr_operand_reg(const ee_prv_x86_state_t* distate, const ee_prv_x86_modrm_reg_pack_t* ptr_reg, ee_x86_pointer_operand_base_register_t* out) {
 
     if (!ptr_reg) {
 
@@ -611,7 +612,7 @@ ee_bool_t ee_prv_x86_state_transform_modrm_ptr_base_reg_to_ptr_operand_reg(const
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_transform_modrm_ptr_index_reg_to_ptr_operand_reg(const ee_prv_x86_state_t* distate, ee_size_t vsib_index_reg_size_bits, const ee_prv_x86_modrm_reg_pack_t* ptr_reg, ee_x86_pointer_operand_index_register_t* out) {
+static ee_bool_t ee_prv_x86_state_transform_modrm_ptr_index_reg_to_ptr_operand_reg(const ee_prv_x86_state_t* distate, ee_size_t vsib_index_reg_size_bits, const ee_prv_x86_modrm_reg_pack_t* ptr_reg, ee_x86_pointer_operand_index_register_t* out) {
 
     ee_memset(out, 0, sizeof(*out));
 
@@ -670,7 +671,7 @@ ee_bool_t ee_prv_x86_state_transform_modrm_ptr_index_reg_to_ptr_operand_reg(cons
     return EE_TRUE;
 }
 
-ee_x86_gpp_register_type_t ee_prv_x86_convert_gpp8_reg_to_x64_counterpart(ee_x86_gpp_register_type_t in) {
+static ee_x86_gpp_register_type_t ee_prv_x86_convert_gpp8_reg_to_x64_counterpart(ee_x86_gpp_register_type_t in) {
 
     switch (in) {
     case EE_X86_GPP_REGISTER_AH: return EE_X86_GPP_REGISTER_SPL;
@@ -683,7 +684,7 @@ ee_x86_gpp_register_type_t ee_prv_x86_convert_gpp8_reg_to_x64_counterpart(ee_x86
     return in;
 }
 
-ee_bool_t ee_prv_x86_is_register_type_extendable_via_rex(ee_x86_register_type_t reg_type) {
+static ee_bool_t ee_prv_x86_is_register_type_extendable_via_rex(ee_x86_register_type_t reg_type) {
 
     return reg_type == EE_X86_REGISTER_GENERAL_PURPOSE
         || reg_type == EE_X86_REGISTER_AVX_128
@@ -692,7 +693,7 @@ ee_bool_t ee_prv_x86_is_register_type_extendable_via_rex(ee_x86_register_type_t 
         || reg_type == EE_X86_REGISTER_DEBUG;
 }
 
-ee_bool_t ee_prv_x86_state_transform_modrm_reg_to_reg_operand(const ee_prv_x86_state_t* distate, const ee_prv_x86_modrm_reg_pack_t* modrm_reg, ee_bool_t is_rm_field, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_register_operand_t* out) {
+static ee_bool_t ee_prv_x86_state_transform_modrm_reg_to_reg_operand(const ee_prv_x86_state_t* distate, const ee_prv_x86_modrm_reg_pack_t* modrm_reg, ee_bool_t is_rm_field, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_register_operand_t* out) {
 
     const ee_bool_t mode_64 = ee_prv_x86_state_is_64_bit_mode_active(distate);
 
@@ -755,7 +756,7 @@ ee_bool_t ee_prv_x86_state_transform_modrm_reg_to_reg_operand(const ee_prv_x86_s
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_process_modrm_byte_into_operands_fine_grained(ee_prv_x86_state_t* distate, ee_bool_t requires_vsib, ee_x86_pointer_type_t rm_ptr_type, ee_x86_register_type_t rm_reg_type, ee_size_t rm_reg_size_bits, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_operand_t* rm, ee_x86_operand_t* reg) {
+static ee_bool_t ee_prv_x86_state_process_modrm_byte_into_operands_fine_grained(ee_prv_x86_state_t* distate, ee_bool_t requires_vsib, ee_x86_pointer_type_t rm_ptr_type, ee_x86_register_type_t rm_reg_type, ee_size_t rm_reg_size_bits, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_operand_t* rm, ee_x86_operand_t* reg) {
 
     /* If "requires_vsib" is true, "rm_reg_type" should be ignored and the size in bits (128 or 256) of the vector-based index register must be obtained from "rm_reg_size_bits".
     */
@@ -809,17 +810,17 @@ ee_bool_t ee_prv_x86_state_process_modrm_byte_into_operands_fine_grained(ee_prv_
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_process_modrm_byte_into_operands(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr_type, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_operand_t* rm, ee_x86_operand_t* reg) {
+static ee_bool_t ee_prv_x86_state_process_modrm_byte_into_operands(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr_type, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_operand_t* rm, ee_x86_operand_t* reg) {
 
     return ee_prv_x86_state_process_modrm_byte_into_operands_fine_grained(distate, EE_FALSE, ptr_type, reg_type, reg_size_bits, reg_type, reg_size_bits, rm, reg);
 }
 
-ee_bool_t ee_prv_x86_state_process_modrm_byte_into_rm_operand(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr_type, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_operand_t* rm) {
+static ee_bool_t ee_prv_x86_state_process_modrm_byte_into_rm_operand(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr_type, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_operand_t* rm) {
 
     return ee_prv_x86_state_process_modrm_byte_into_operands_fine_grained(distate, EE_FALSE, ptr_type, reg_type, reg_size_bits, EE_X86_REGISTER_NOT_EXISTING, 0, rm, 0);
 }
 
-ee_bool_t ee_prv_x86_state_process_immediate_bytes_into_operand(ee_prv_x86_state_t* distate, ee_size_t num_bits, ee_x86_operand_t* opd) {
+static ee_bool_t ee_prv_x86_state_process_immediate_bytes_into_operand(ee_prv_x86_state_t* distate, ee_size_t num_bits, ee_x86_operand_t* opd) {
 
     ee_int64_t immb = 0;
 
@@ -833,7 +834,7 @@ ee_bool_t ee_prv_x86_state_process_immediate_bytes_into_operand(ee_prv_x86_state
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_process_relative_address_into_operand(ee_prv_x86_state_t* distate, ee_size_t num_bits, ee_x86_operand_t* opd) {
+static ee_bool_t ee_prv_x86_state_process_relative_address_into_operand(ee_prv_x86_state_t* distate, ee_size_t num_bits, ee_x86_operand_t* opd) {
 
     ee_int64_t raw_offs = 0;
 
@@ -851,7 +852,7 @@ ee_bool_t ee_prv_x86_state_process_relative_address_into_operand(ee_prv_x86_stat
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_process_vex_register_specifier_into_operand(const ee_prv_x86_state_t* distate, ee_uint8_t vex_reg_spec, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_operand_t* out) {
+static ee_bool_t ee_prv_x86_state_process_vex_register_specifier_into_operand(const ee_prv_x86_state_t* distate, ee_uint8_t vex_reg_spec, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_operand_t* out) {
 
     ee_size_t actual_reg_index = 0;
 
@@ -874,7 +875,7 @@ ee_bool_t ee_prv_x86_state_process_vex_register_specifier_into_operand(const ee_
     if (reg_type == EE_X86_REGISTER_GENERAL_PURPOSE) {
 
         const ee_prv_x86_modrm_reg_pack_t* reg_pack = 0;
-        if (actual_reg_index < EE_PRV_X86_MODRM_REG_PACKS_COUNT)
+        if (actual_reg_index < EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM_REG_PACKS))
             reg_pack = EE_PRV_X86_MODRM_REG_PACKS[actual_reg_index];
 
         if (!reg_pack) {
@@ -904,14 +905,14 @@ ee_bool_t ee_prv_x86_state_process_vex_register_specifier_into_operand(const ee_
     return EE_FALSE;
 }
 
-ee_bool_t ee_prv_x86_state_process_modrm_reg_pack_into_operand(const ee_prv_x86_state_t* distate, const ee_prv_x86_modrm_reg_pack_t* reg_pack, ee_size_t reg_size_bits, ee_x86_operand_t* out) {
+static ee_bool_t ee_prv_x86_state_process_modrm_reg_pack_into_operand(const ee_prv_x86_state_t* distate, const ee_prv_x86_modrm_reg_pack_t* reg_pack, ee_size_t reg_size_bits, ee_x86_operand_t* out) {
 
     out->type = EE_X86_OPERAND_REGISTER;
 
     return ee_prv_x86_state_transform_modrm_reg_to_reg_operand(distate, reg_pack, EE_TRUE, EE_X86_REGISTER_GENERAL_PURPOSE, reg_size_bits, &out->un.reg1ster);
 }
 
-void ee_prv_x86_state_get_dynamic_modrm_operand_info(const ee_prv_x86_state_t* distate, ee_x86_pointer_type_t* ptr_type, ee_size_t* reg_size_bits) {
+static void ee_prv_x86_state_get_dynamic_modrm_operand_info(const ee_prv_x86_state_t* distate, ee_x86_pointer_type_t* ptr_type, ee_size_t* reg_size_bits) {
 
     ee_x86_pointer_type_t tmp_ptr_type = EE_X86_POINTER_NOT_EXISTING;
     ee_size_t tmp_reg_size_bits = 0;
@@ -936,7 +937,7 @@ void ee_prv_x86_state_get_dynamic_modrm_operand_info(const ee_prv_x86_state_t* d
     *reg_size_bits = tmp_reg_size_bits;
 }
 
-ee_bool_t ee_prv_x86_state_vex_get_dynamic_modrm_operand_info(const ee_prv_x86_state_t* distate, ee_uint8_t* vex_reg_spec, ee_x86_pointer_type_t* ptr_type, ee_x86_register_type_t* reg_type, ee_size_t* reg_size_bits) {
+static ee_bool_t ee_prv_x86_state_vex_get_dynamic_modrm_operand_info(const ee_prv_x86_state_t* distate, ee_uint8_t* vex_reg_spec, ee_x86_pointer_type_t* ptr_type, ee_x86_register_type_t* reg_type, ee_size_t* reg_size_bits) {
 
     ee_uint8_t vex_rxbwl = 0;
 
@@ -959,7 +960,7 @@ ee_bool_t ee_prv_x86_state_vex_get_dynamic_modrm_operand_info(const ee_prv_x86_s
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_vex_get_register_specifier(const ee_prv_x86_state_t* distate, ee_uint8_t* reg_spec) {
+static ee_bool_t ee_prv_x86_state_vex_get_register_specifier(const ee_prv_x86_state_t* distate, ee_uint8_t* reg_spec) {
 
     ee_x86_pointer_type_t ignored_ptr_type = EE_X86_POINTER_NOT_EXISTING;
     ee_x86_register_type_t ignored_reg_type = EE_X86_REGISTER_NOT_EXISTING;
@@ -968,7 +969,7 @@ ee_bool_t ee_prv_x86_state_vex_get_register_specifier(const ee_prv_x86_state_t* 
     return ee_prv_x86_state_vex_get_dynamic_modrm_operand_info(distate, reg_spec, &ignored_ptr_type, &ignored_reg_type, &ignored_reg_size_bits);
 }
 
-ee_int32_t ee_prv_x86_state_advance_operand_index(ee_prv_x86_state_t* distate) {
+static ee_int32_t ee_prv_x86_state_advance_operand_index(ee_prv_x86_state_t* distate) {
 
     if (distate->num_operands >= EE_GET_ARRAY_LEN(distate->operands))
         return -1;
@@ -976,7 +977,7 @@ ee_int32_t ee_prv_x86_state_advance_operand_index(ee_prv_x86_state_t* distate) {
     return (ee_int32_t)distate->num_operands++;
 }
 
-ee_bool_t ee_prv_x86_state_append_segreg_operand(ee_prv_x86_state_t* distate, ee_x86_segment_register_type_t reg) {
+static ee_bool_t ee_prv_x86_state_append_segreg_operand(ee_prv_x86_state_t* distate, ee_x86_segment_register_type_t reg) {
 
     const ee_int32_t opd_index = ee_prv_x86_state_advance_operand_index(distate);
     if (opd_index < 0)
@@ -989,7 +990,7 @@ ee_bool_t ee_prv_x86_state_append_segreg_operand(ee_prv_x86_state_t* distate, ee
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_append_gppreg_operand_as_is(ee_prv_x86_state_t* distate, ee_x86_gpp_register_type_t reg) {
+static ee_bool_t ee_prv_x86_state_append_gppreg_operand_as_is(ee_prv_x86_state_t* distate, ee_x86_gpp_register_type_t reg) {
 
     const ee_int32_t opd_index = ee_prv_x86_state_advance_operand_index(distate);
     if (opd_index < 0)
@@ -1002,7 +1003,7 @@ ee_bool_t ee_prv_x86_state_append_gppreg_operand_as_is(ee_prv_x86_state_t* dista
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_append_gppreg_operand_with_prefix_adjustments(ee_prv_x86_state_t* distate, const ee_prv_x86_modrm_reg_pack_t* gppreg_pack) {
+static ee_bool_t ee_prv_x86_state_append_gppreg_operand_with_prefix_adjustments(ee_prv_x86_state_t* distate, const ee_prv_x86_modrm_reg_pack_t* gppreg_pack) {
 
     const ee_bool_t has_active_rex_w = ee_prv_x86_state_has_active_rex_w(distate);
     ee_x86_gpp_register_type_t actual_reg = gppreg_pack->gpp32;
@@ -1017,7 +1018,7 @@ ee_bool_t ee_prv_x86_state_append_gppreg_operand_with_prefix_adjustments(ee_prv_
     return ee_prv_x86_state_append_gppreg_operand_as_is(distate, actual_reg);
 }
 
-ee_bool_t ee_prv_x86_state_append_numreg_operand(ee_prv_x86_state_t* distate, ee_x86_register_type_t type, ee_size_t index, ee_size_t size_bits) {
+static ee_bool_t ee_prv_x86_state_append_numreg_operand(ee_prv_x86_state_t* distate, ee_x86_register_type_t type, ee_size_t index, ee_size_t size_bits) {
 
     const ee_int32_t opd_index = ee_prv_x86_state_advance_operand_index(distate);
     if (opd_index < 0)
@@ -1031,12 +1032,12 @@ ee_bool_t ee_prv_x86_state_append_numreg_operand(ee_prv_x86_state_t* distate, ee
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_append_x87reg_operand(ee_prv_x86_state_t* distate, ee_size_t index) {
+static ee_bool_t ee_prv_x86_state_append_x87reg_operand(ee_prv_x86_state_t* distate, ee_size_t index) {
 
     return ee_prv_x86_state_append_numreg_operand(distate, EE_X86_REGISTER_X87, index, 80);
 }
 
-ee_bool_t ee_prv_x86_state_append_pointer_operand_as_is(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr, ee_x86_segment_register_type_t seg_reg, ee_x86_gpp_register_type_t base_reg) {
+static ee_bool_t ee_prv_x86_state_append_pointer_operand_as_is(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr, ee_x86_segment_register_type_t seg_reg, ee_x86_gpp_register_type_t base_reg) {
 
     const ee_int32_t opd_index = ee_prv_x86_state_advance_operand_index(distate);
     if (opd_index < 0)
@@ -1051,7 +1052,7 @@ ee_bool_t ee_prv_x86_state_append_pointer_operand_as_is(ee_prv_x86_state_t* dist
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_append_pointer_operand_with_prefix_adjustments(ee_prv_x86_state_t* distate, ee_bool_t allow_qword_ptr_promotion, ee_x86_pointer_type_t opt_ptr, ee_x86_segment_register_type_t opt_seg_reg, const ee_prv_x86_modrm_reg_pack_t* base_reg_pack) {
+static ee_bool_t ee_prv_x86_state_append_pointer_operand_with_prefix_adjustments(ee_prv_x86_state_t* distate, ee_bool_t allow_qword_ptr_promotion, ee_x86_pointer_type_t opt_ptr, ee_x86_segment_register_type_t opt_seg_reg, const ee_prv_x86_modrm_reg_pack_t* base_reg_pack) {
 
     const ee_bool_t mode_64 = ee_prv_x86_state_is_64_bit_mode_active(distate);
     const ee_bool_t override_addr_size = ee_prv_x86_state_has_active_address_size_override(distate);
@@ -1094,7 +1095,7 @@ ee_bool_t ee_prv_x86_state_append_pointer_operand_with_prefix_adjustments(ee_prv
     return ee_prv_x86_state_append_pointer_operand_as_is(distate, actual_ptr, actual_seg_reg, actual_base_reg);
 }
 
-ee_bool_t ee_prv_x86_state_append_far_pointer_operand(ee_prv_x86_state_t* distate, ee_uint16_t selector, ee_uint32_t offset, ee_size_t offset_size_bits) {
+static ee_bool_t ee_prv_x86_state_append_far_pointer_operand(ee_prv_x86_state_t* distate, ee_uint16_t selector, ee_uint32_t offset, ee_size_t offset_size_bits) {
 
     const ee_int32_t opd_index = ee_prv_x86_state_advance_operand_index(distate);
     if (opd_index < 0)
@@ -1108,7 +1109,7 @@ ee_bool_t ee_prv_x86_state_append_far_pointer_operand(ee_prv_x86_state_t* distat
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_append_imm_bytes_operand(ee_prv_x86_state_t* distate, ee_size_t imm_num_bits, ee_int64_t imm_value) {
+static ee_bool_t ee_prv_x86_state_append_imm_bytes_operand(ee_prv_x86_state_t* distate, ee_size_t imm_num_bits, ee_int64_t imm_value) {
 
     const ee_int32_t opd_index = ee_prv_x86_state_advance_operand_index(distate);
     if (opd_index < 0)
@@ -1121,7 +1122,7 @@ ee_bool_t ee_prv_x86_state_append_imm_bytes_operand(ee_prv_x86_state_t* distate,
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_imm_bytes_operand(ee_prv_x86_state_t* distate, ee_size_t imm_bits) {
+static ee_bool_t ee_prv_x86_state_process_and_append_imm_bytes_operand(ee_prv_x86_state_t* distate, ee_size_t imm_bits) {
 
     const ee_int32_t opd_index = ee_prv_x86_state_advance_operand_index(distate);
     if (opd_index < 0)
@@ -1130,7 +1131,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_imm_bytes_operand(ee_prv_x86_state
     return ee_prv_x86_state_process_immediate_bytes_into_operand(distate, imm_bits, &distate->operands[opd_index]);
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_is4_numreg_operand(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits) {
+static ee_bool_t ee_prv_x86_state_process_and_append_is4_numreg_operand(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits) {
 
     const ee_bool_t mode_64 = distate->active_mode == EE_X86_MODE_64;
     ee_int64_t raw_is4 = 0;
@@ -1151,7 +1152,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_is4_numreg_operand(ee_prv_x86_stat
     return ee_prv_x86_state_append_numreg_operand(distate, reg_type, (ee_size_t)reg_index, reg_size_bits);
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_rel_address_operand(ee_prv_x86_state_t* distate, ee_size_t rel_addr_bits) {
+static ee_bool_t ee_prv_x86_state_process_and_append_rel_address_operand(ee_prv_x86_state_t* distate, ee_size_t rel_addr_bits) {
 
     const ee_int32_t opd_index = ee_prv_x86_state_advance_operand_index(distate);
     if (opd_index < 0)
@@ -1160,7 +1161,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_rel_address_operand(ee_prv_x86_sta
     return ee_prv_x86_state_process_relative_address_into_operand(distate, rel_addr_bits, &distate->operands[opd_index]);
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_modrm_rm_operand(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits) {
+static ee_bool_t ee_prv_x86_state_process_and_append_modrm_rm_operand(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits) {
 
     const ee_int32_t opd_index = ee_prv_x86_state_advance_operand_index(distate);
     if (opd_index < 0)
@@ -1169,12 +1170,12 @@ ee_bool_t ee_prv_x86_state_process_and_append_modrm_rm_operand(ee_prv_x86_state_
     return ee_prv_x86_state_process_modrm_byte_into_rm_operand(distate, ptr, reg_type, reg_size_bits, &distate->operands[opd_index]);
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_modrm_m_operand(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr) {
+static ee_bool_t ee_prv_x86_state_process_and_append_modrm_m_operand(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr) {
 
     return ee_prv_x86_state_process_and_append_modrm_rm_operand(distate, ptr, EE_X86_REGISTER_NOT_EXISTING, 0);
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_rm_operands_fine_grained(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t rm_ptr_type, ee_x86_register_type_t rm_reg_type, ee_size_t rm_reg_size_bits, ee_bool_t reverse_order) {
+static ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_rm_operands_fine_grained(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t rm_ptr_type, ee_x86_register_type_t rm_reg_type, ee_size_t rm_reg_size_bits, ee_bool_t reverse_order) {
 
     ee_int32_t reg_index = 0;
     ee_int32_t rm_index = 0;
@@ -1208,7 +1209,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_rm_operands_fine_grained
     );
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_rm_operands(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t ptr_type, ee_bool_t reverse_order) {
+static ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_rm_operands(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t ptr_type, ee_bool_t reverse_order) {
 
     return ee_prv_x86_state_process_and_append_modrm_reg_rm_operands_fine_grained(
         distate,
@@ -1221,7 +1222,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_rm_operands(ee_prv_x86_s
     );
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_modrm_vexVVVV_rm_operands_fine_grained(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t rm_ptr_type, ee_x86_register_type_t rm_reg_type, ee_size_t rm_reg_size_bits, ee_uint8_t vex_reg_spec) {
+static ee_bool_t ee_prv_x86_state_process_and_append_modrm_vexVVVV_rm_operands_fine_grained(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t rm_ptr_type, ee_x86_register_type_t rm_reg_type, ee_size_t rm_reg_size_bits, ee_uint8_t vex_reg_spec) {
 
     ee_int32_t vexVVVV_index = 0;
     ee_int32_t rm_index = 0;
@@ -1238,7 +1239,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_modrm_vexVVVV_rm_operands_fine_gra
         && ee_prv_x86_state_process_vex_register_specifier_into_operand(distate, vex_reg_spec, rm_reg_type, rm_reg_size_bits, &distate->operands[vexVVVV_index]);
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_vexVVVV_rm_operands_fine_grained(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t rm_ptr_type, ee_x86_register_type_t rm_reg_type, ee_size_t rm_reg_size_bits, ee_uint8_t vex_reg_spec, ee_bool_t reverse_reg_rm_order) {
+static ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_vexVVVV_rm_operands_fine_grained(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t rm_ptr_type, ee_x86_register_type_t rm_reg_type, ee_size_t rm_reg_size_bits, ee_uint8_t vex_reg_spec, ee_bool_t reverse_reg_rm_order) {
 
     ee_int32_t reg_index = 0;
     ee_int32_t vexVVVV_index = 0;
@@ -1268,7 +1269,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_vexVVVV_rm_operands_fine
         && ee_prv_x86_state_process_vex_register_specifier_into_operand(distate, vex_reg_spec, reg_type, reg_size_bits, &distate->operands[vexVVVV_index]);
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_rm_vexVVVV_operands_fine_grained(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t rm_ptr_type, ee_x86_register_type_t rm_reg_type, ee_size_t rm_reg_size_bits, ee_uint8_t vex_reg_spec, ee_bool_t reverse_reg_rm_order) {
+static ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_rm_vexVVVV_operands_fine_grained(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t rm_ptr_type, ee_x86_register_type_t rm_reg_type, ee_size_t rm_reg_size_bits, ee_uint8_t vex_reg_spec, ee_bool_t reverse_reg_rm_order) {
 
     ee_int32_t reg_index = 0;
     ee_int32_t rm_index = 0;
@@ -1298,7 +1299,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_rm_vexVVVV_operands_fine
         && ee_prv_x86_state_process_vex_register_specifier_into_operand(distate, vex_reg_spec, reg_type, reg_size_bits, &distate->operands[vexVVVV_index]);
 }
 
-ee_bool_t ee_prv_x86_state_verify_operands_vsib_conformity(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_verify_operands_vsib_conformity(const ee_prv_x86_state_t* distate) {
 
     const ee_x86_operand_t* opd0 = 0;
     const ee_x86_operand_t* opd1 = 0;
@@ -1347,7 +1348,7 @@ ee_bool_t ee_prv_x86_state_verify_operands_vsib_conformity(const ee_prv_x86_stat
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_vsib_vexVVVV_operands_fine_grained(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t rm_ptr_type, ee_size_t vsib_index_reg_size_bits, ee_uint8_t vex_reg_spec) {
+static ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_vsib_vexVVVV_operands_fine_grained(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t rm_ptr_type, ee_size_t vsib_index_reg_size_bits, ee_uint8_t vex_reg_spec) {
 
     ee_int32_t reg_index = 0;
     ee_int32_t vsib_index = 0;
@@ -1377,7 +1378,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_vsib_vexVVVV_operands_fi
     return ee_prv_x86_state_verify_operands_vsib_conformity(distate);
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_vexVVVV_rm_operands(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t ptr_type, ee_uint8_t vex_reg_spec, ee_bool_t reverse_reg_rm_order) {
+static ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_vexVVVV_rm_operands(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t ptr_type, ee_uint8_t vex_reg_spec, ee_bool_t reverse_reg_rm_order) {
 
     return ee_prv_x86_state_process_and_append_modrm_reg_vexVVVV_rm_operands_fine_grained(
         distate,
@@ -1391,7 +1392,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_modrm_reg_vexVVVV_rm_operands(ee_p
     );
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_modrm_vexVVVV_rm_operands(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t ptr_type, ee_uint8_t vex_reg_spec, ee_bool_t reverse_vexVVVV_rm_order) {
+static ee_bool_t ee_prv_x86_state_process_and_append_modrm_vexVVVV_rm_operands(ee_prv_x86_state_t* distate, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_pointer_type_t ptr_type, ee_uint8_t vex_reg_spec, ee_bool_t reverse_vexVVVV_rm_order) {
 
     ee_int32_t vexVVVV_index = 0;
     ee_int32_t rm_index = 0;
@@ -1416,7 +1417,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_modrm_vexVVVV_rm_operands(ee_prv_x
         && ee_prv_x86_state_process_modrm_byte_into_rm_operand(distate, ptr_type, reg_type, reg_size_bits, &distate->operands[rm_index]);
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_plusi_x87reg_operand(ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_process_and_append_plusi_x87reg_operand(ee_prv_x86_state_t* distate) {
 
     ee_byte_t reg_code = 0;
     if (!ee_prv_x86_state_consume_plusi_register_code(distate, &reg_code))
@@ -1425,7 +1426,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_plusi_x87reg_operand(ee_prv_x86_st
     return ee_prv_x86_state_append_x87reg_operand(distate, reg_code);
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_plusr_gppreg_operand(ee_prv_x86_state_t* distate, ee_size_t reg_size_bits) {
+static ee_bool_t ee_prv_x86_state_process_and_append_plusr_gppreg_operand(ee_prv_x86_state_t* distate, ee_size_t reg_size_bits) {
 
     const ee_prv_x86_modrm_reg_pack_t* reg_pack = 0;
     ee_int32_t opd_index = 0;
@@ -1440,7 +1441,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_plusr_gppreg_operand(ee_prv_x86_st
     return ee_prv_x86_state_process_modrm_reg_pack_into_operand(distate, reg_pack, reg_size_bits, &distate->operands[opd_index]);
 }
 
-ee_bool_t ee_prv_x86_state_process_and_append_moffs_operand(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr_type) {
+static ee_bool_t ee_prv_x86_state_process_and_append_moffs_operand(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr_type) {
 
     const ee_int32_t opd_index = ee_prv_x86_state_advance_operand_index(distate);
     ee_size_t moffs_num_bits = 32;
@@ -1469,7 +1470,7 @@ ee_bool_t ee_prv_x86_state_process_and_append_moffs_operand(ee_prv_x86_state_t* 
     return ee_prv_x86_state_consume_displacement(distate, moffs_num_bits, &opd->un.pointer.displacement);
 }
 
-ee_bool_t ee_prv_x86_is_group_prefix_byte(ee_byte_t byte, ee_size_t* group_index) {
+static ee_bool_t ee_prv_x86_is_group_prefix_byte(ee_byte_t byte, ee_size_t* group_index) {
 
     if (byte < EE_PRV_X86_GRP2_PREFIX_ES_OVR || byte > EE_PRV_X86_GRP1_PREFIX_REP || !group_index)
         return EE_FALSE;
@@ -1507,12 +1508,12 @@ ee_bool_t ee_prv_x86_is_group_prefix_byte(ee_byte_t byte, ee_size_t* group_index
     return EE_FALSE;
 }
 
-ee_bool_t ee_prv_x86_is_mandatory_group_prefix_candidate(ee_byte_t byte) {
+static ee_bool_t ee_prv_x86_is_mandatory_group_prefix_candidate(ee_byte_t byte) {
 
     return byte == EE_PRV_X86_MANDATORY_GRP_PREFIX_66 || byte == EE_PRV_X86_MANDATORY_GRP_PREFIX_F2 || byte == EE_PRV_X86_MANDATORY_GRP_PREFIX_F3;
 }
 
-ee_bool_t ee_prv_x86_collect_vex_prefix(ee_prv_x86_state_t* distate, ee_size_t vex_prefix_len) {
+static ee_bool_t ee_prv_x86_collect_vex_prefix(ee_prv_x86_state_t* distate, ee_size_t vex_prefix_len) {
 
     const ee_size_t vex_beyond_end_index = distate->byte_index + vex_prefix_len;
     ee_byte_t cur_byte = 0;
@@ -1532,7 +1533,7 @@ ee_bool_t ee_prv_x86_collect_vex_prefix(ee_prv_x86_state_t* distate, ee_size_t v
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_collect_prefixes(ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_collect_prefixes(ee_prv_x86_state_t* distate) {
 
     /* Collects all prefix bytes and return EE_TRUE when the instruction byte has been reached. */
     do {
@@ -1625,7 +1626,7 @@ ee_bool_t ee_prv_x86_collect_prefixes(ee_prv_x86_state_t* distate) {
     return EE_FALSE;
 }
 
-ee_bool_t ee_prv_x86_collect_opcode_identity_list(ee_prv_x86_state_t* distate, const ee_prv_x86_opcode_identity_list_t** opcode_identity_list) {
+static ee_bool_t ee_prv_x86_collect_opcode_identity_list(ee_prv_x86_state_t* distate, const ee_prv_x86_opcode_identity_list_t** opcode_identity_list) {
 
     ee_byte_t cur_byte = 0;
     const ee_prv_x86_opcode_identity_list_t* identity_lists = 0;
@@ -1645,7 +1646,7 @@ ee_bool_t ee_prv_x86_collect_opcode_identity_list(ee_prv_x86_state_t* distate, c
                 return EE_FALSE;
 
             identity_lists = EE_PRV_X86_0F38d_OPCODE_IDENTITY_LISTS;
-            num_identity_lists = EE_PRV_X86_0F38d_OPCODE_IDENTITY_LISTS_COUNT;
+            num_identity_lists = EE_GET_ARRAY_LEN(EE_PRV_X86_0F38d_OPCODE_IDENTITY_LISTS);
         }
         else if (cur_byte == EE_PRV_X86_ESCAPE_OPCODE_1_3A) {
 
@@ -1653,18 +1654,18 @@ ee_bool_t ee_prv_x86_collect_opcode_identity_list(ee_prv_x86_state_t* distate, c
                 return EE_FALSE;
 
             identity_lists = EE_PRV_X86_0F3Ad_OPCODE_IDENTITY_LISTS;
-            num_identity_lists = EE_PRV_X86_0F3Ad_OPCODE_IDENTITY_LISTS_COUNT;
+            num_identity_lists = EE_GET_ARRAY_LEN(EE_PRV_X86_0F3Ad_OPCODE_IDENTITY_LISTS);
         }
         else {
 
             identity_lists = EE_PRV_X86_0Fd_OPCODE_IDENTITY_LISTS;
-            num_identity_lists = EE_PRV_X86_0Fd_OPCODE_IDENTITY_LISTS_COUNT;
+            num_identity_lists = EE_GET_ARRAY_LEN(EE_PRV_X86_0Fd_OPCODE_IDENTITY_LISTS);
         }
     }
     else {
 
         identity_lists = EE_PRV_X86_OPCODE_IDENTITY_LISTS;
-        num_identity_lists = EE_PRV_X86_OPCODE_IDENTITY_LISTS_COUNT;
+        num_identity_lists = EE_GET_ARRAY_LEN(EE_PRV_X86_OPCODE_IDENTITY_LISTS);
     }
 
     if (cur_byte >= num_identity_lists)
@@ -1675,7 +1676,7 @@ ee_bool_t ee_prv_x86_collect_opcode_identity_list(ee_prv_x86_state_t* distate, c
     return ee_prv_x86_state_just_advance_bytes(distate);
 }
 
-ee_bool_t ee_prv_x86_check_mode_compatibility(ee_x86_mode_t active_mode, ee_prv_x86_supported_mode_t supported_mode) {
+static ee_bool_t ee_prv_x86_check_mode_compatibility(ee_x86_mode_t active_mode, ee_prv_x86_supported_mode_t supported_mode) {
 
     /* At this point there is a distinction between three groups of instructions:
        
@@ -1691,7 +1692,7 @@ ee_bool_t ee_prv_x86_check_mode_compatibility(ee_x86_mode_t active_mode, ee_prv_
     return supported_mode == EE_PRV_X86_SUPPMOD_32_64 || (mode_64 == (supported_mode == EE_PRV_X86_SUPPMOD_64));
 }
 
-ee_int32_t ee_prv_x86_lookup_mandatory_prefix_group_index(ee_byte_t prefix_byte) {
+static ee_int32_t ee_prv_x86_lookup_mandatory_prefix_group_index(ee_byte_t prefix_byte) {
 
     switch (prefix_byte) {
 
@@ -1710,7 +1711,7 @@ ee_int32_t ee_prv_x86_lookup_mandatory_prefix_group_index(ee_byte_t prefix_byte)
     return -1;
 }
 
-ee_bool_t ee_prv_x86_check_grp_prefix_constraints(const ee_prv_x86_prefix_state_t* prefix_state, const ee_prv_x86_grp_prefix_constraints_t* constraints, ee_bool_t* secondary_constraints_met) {
+static ee_bool_t ee_prv_x86_check_grp_prefix_constraints(const ee_prv_x86_prefix_state_t* prefix_state, const ee_prv_x86_grp_prefix_constraints_t* constraints, ee_bool_t* secondary_constraints_met) {
 
     const ee_size_t num_set_prefixes = EE_GET_ARRAY_LEN(prefix_state->grp_prefixes);
     const ee_size_t num_prohibited_prefixes = EE_GET_ARRAY_LEN(constraints->prohibited_prefixes);
@@ -1785,7 +1786,7 @@ ee_bool_t ee_prv_x86_check_grp_prefix_constraints(const ee_prv_x86_prefix_state_
     return mandatory_prefix_set && prohibited_prefixes_unset;
 }
 
-ee_bool_t ee_prv_x86_check_grp_rex_prefix_constraints(const ee_prv_x86_state_t* distate, const ee_prv_x86_grp_rex_prefix_constraints_t* constraints, ee_bool_t* secondary_constraints_met) {
+static ee_bool_t ee_prv_x86_check_grp_rex_prefix_constraints(const ee_prv_x86_state_t* distate, const ee_prv_x86_grp_rex_prefix_constraints_t* constraints, ee_bool_t* secondary_constraints_met) {
 
     const ee_bool_t mode_64 = ee_prv_x86_state_is_64_bit_mode_active(distate);
 
@@ -1811,7 +1812,7 @@ ee_bool_t ee_prv_x86_check_grp_rex_prefix_constraints(const ee_prv_x86_state_t* 
     return ee_prv_x86_check_grp_prefix_constraints(&distate->active_prefixes, &constraints->grp_cons, secondary_constraints_met);
 }
 
-ee_bool_t ee_prv_x86_check_vex_prefix_constraints(const ee_prv_x86_state_t* distate, const ee_prv_x86_vex_prefix_constraints_t* constraints) {
+static ee_bool_t ee_prv_x86_check_vex_prefix_constraints(const ee_prv_x86_state_t* distate, const ee_prv_x86_vex_prefix_constraints_t* constraints) {
 
     const ee_prv_x86_prefix_state_t* const prefix_state = &distate->active_prefixes;
 
@@ -1864,7 +1865,7 @@ ee_bool_t ee_prv_x86_check_vex_prefix_constraints(const ee_prv_x86_state_t* dist
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_check_address_size_override_prefix_constraints(const ee_prv_x86_state_t* distate, const ee_prv_x86_address_size_override_prefix_constraints_t* constraints) {
+static ee_bool_t ee_prv_x86_check_address_size_override_prefix_constraints(const ee_prv_x86_state_t* distate, const ee_prv_x86_address_size_override_prefix_constraints_t* constraints) {
 
     const ee_bool_t mode_64 = ee_prv_x86_state_is_64_bit_mode_active(distate);
     const ee_bool_t has_aso_prefix = ee_prv_x86_state_has_active_address_size_override(distate);
@@ -1889,7 +1890,7 @@ ee_bool_t ee_prv_x86_check_address_size_override_prefix_constraints(const ee_prv
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_check_prefix_compatibility(const ee_prv_x86_state_t* distate, const ee_prv_x86_opcode_identity_t* opcode_ident, ee_bool_t* secondary_compatible) {
+static ee_bool_t ee_prv_x86_check_prefix_compatibility(const ee_prv_x86_state_t* distate, const ee_prv_x86_opcode_identity_t* opcode_ident, ee_bool_t* secondary_compatible) {
 
     const ee_prv_x86_prefix_state_t* const prefix_state = &distate->active_prefixes;
     const ee_prv_x86_prefix_constraints_t* const prefix_constraints = opcode_ident->prefix_constraints;
@@ -1934,7 +1935,7 @@ ee_bool_t ee_prv_x86_check_prefix_compatibility(const ee_prv_x86_state_t* distat
     return check_has_passed;
 }
 
-ee_bool_t ee_prv_x86_check_modrm_operand_constraints(ee_byte_t operand_byte, const ee_prv_x86_modrm_operand_constraints_t* constraints) {
+static ee_bool_t ee_prv_x86_check_modrm_operand_constraints(ee_byte_t operand_byte, const ee_prv_x86_modrm_operand_constraints_t* constraints) {
 
     const ee_byte_t set_modrm_mod = (operand_byte & EE_PRV_X86_MODRM_MOD_MASK) >> 6;
     const ee_byte_t set_modrm_rm = (operand_byte & EE_PRV_X86_MODRM_RM_MASK);
@@ -1961,7 +1962,7 @@ ee_bool_t ee_prv_x86_check_modrm_operand_constraints(ee_byte_t operand_byte, con
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_check_modrm_operand_bit_constraints(ee_byte_t operand_byte, const ee_prv_x86_modrm_operand_bit_constraints_t* constraints) {
+static ee_bool_t ee_prv_x86_check_modrm_operand_bit_constraints(ee_byte_t operand_byte, const ee_prv_x86_modrm_operand_bit_constraints_t* constraints) {
 
     const ee_byte_t set_modrm_mod = (operand_byte & EE_PRV_X86_MODRM_MOD_MASK) >> 6;
     const ee_byte_t set_modrm_rm = (operand_byte & EE_PRV_X86_MODRM_RM_MASK);
@@ -1988,7 +1989,7 @@ ee_bool_t ee_prv_x86_check_modrm_operand_bit_constraints(ee_byte_t operand_byte,
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_check_byte_range_operand_constraints(ee_byte_t operand_byte, const ee_prv_x86_byte_range_operand_constraints_t* constraints) {
+static ee_bool_t ee_prv_x86_check_byte_range_operand_constraints(ee_byte_t operand_byte, const ee_prv_x86_byte_range_operand_constraints_t* constraints) {
 
     if (constraints->first && !constraints->last)
         return operand_byte == constraints->first;
@@ -1996,7 +1997,7 @@ ee_bool_t ee_prv_x86_check_byte_range_operand_constraints(ee_byte_t operand_byte
     return operand_byte >= constraints->first && operand_byte <= constraints->last;
 }
 
-ee_bool_t ee_prv_x86_check_operand_compatibility(const ee_prv_x86_state_t* distate, const ee_prv_x86_opcode_identity_t* opcode_ident) {
+static ee_bool_t ee_prv_x86_check_operand_compatibility(const ee_prv_x86_state_t* distate, const ee_prv_x86_opcode_identity_t* opcode_ident) {
 
     const ee_prv_x86_operand_constraints_t* const operand_constraints = opcode_ident->operand_constraints;
     ee_byte_t operand_byte = 0;
@@ -2033,7 +2034,7 @@ ee_bool_t ee_prv_x86_check_operand_compatibility(const ee_prv_x86_state_t* dista
     return check_has_passed;
 }
 
-void ee_prv_x86_state_confirm_mandatory_prefix_byte(ee_prv_x86_state_t* distate, const ee_prv_x86_opcode_identity_t* opcode_ident) {    
+static void ee_prv_x86_state_confirm_mandatory_prefix_byte(ee_prv_x86_state_t* distate, const ee_prv_x86_opcode_identity_t* opcode_ident) {
 
     if (!opcode_ident->prefix_constraints)
         return;
@@ -2065,7 +2066,7 @@ void ee_prv_x86_state_confirm_mandatory_prefix_byte(ee_prv_x86_state_t* distate,
     }
 }
 
-ee_uint32_t ee_prv_x86_is_opcode_identity_eligible_for_hle(const ee_prv_x86_opcode_identity_t* opcode_ident) {
+static ee_uint32_t ee_prv_x86_is_opcode_identity_eligible_for_hle(const ee_prv_x86_opcode_identity_t* opcode_ident) {
 
     if (opcode_ident->flags & EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK)
         return EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK;
@@ -2079,7 +2080,7 @@ ee_uint32_t ee_prv_x86_is_opcode_identity_eligible_for_hle(const ee_prv_x86_opco
     return 0;
 }
 
-ee_bool_t ee_prv_x86_identify_opcode(ee_prv_x86_state_t* distate, const ee_prv_x86_opcode_identity_list_t* opcode_identity_list) {
+static ee_bool_t ee_prv_x86_identify_opcode(ee_prv_x86_state_t* distate, const ee_prv_x86_opcode_identity_list_t* opcode_identity_list) {
 
     ee_size_t ident_index = 0;
     const ee_prv_x86_opcode_identity_t* ident = 0;
@@ -2137,7 +2138,7 @@ ee_bool_t ee_prv_x86_identify_opcode(ee_prv_x86_state_t* distate, const ee_prv_x
     return ident != 0;
 }
 
-ee_x86_prefix_type_t ee_prv_x86_lookup_grp1_prefix_type(ee_byte_t pb, ee_bool_t is_xacquire_enabled, ee_bool_t is_xrelease_enabled, ee_bool_t is_bnd_enabled) {
+static ee_x86_prefix_type_t ee_prv_x86_lookup_grp1_prefix_type(ee_byte_t pb, ee_bool_t is_xacquire_enabled, ee_bool_t is_xrelease_enabled, ee_bool_t is_bnd_enabled) {
 
     switch (pb) {
 
@@ -2166,7 +2167,7 @@ ee_x86_prefix_type_t ee_prv_x86_lookup_grp1_prefix_type(ee_byte_t pb, ee_bool_t 
     return EE_X86_PREFIX_NOT_EXISTING;
 }
 
-ee_bool_t ee_prv_x86_state_has_memory_destination_operand(const ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_has_memory_destination_operand(const ee_prv_x86_state_t* distate) {
 
     if (distate->num_operands > 0 && distate->operands[0].type == EE_X86_OPERAND_POINTER)
         return EE_TRUE;
@@ -2177,7 +2178,7 @@ ee_bool_t ee_prv_x86_state_has_memory_destination_operand(const ee_prv_x86_state
     return EE_FALSE;
 }
 
-ee_size_t ee_prv_x86_identify_grp1_printable_prefixes(ee_prv_x86_state_t* distate) {
+static ee_size_t ee_prv_x86_identify_grp1_printable_prefixes(ee_prv_x86_state_t* distate) {
 
     const ee_prv_x86_prefix_state_t* const ps = &distate->active_prefixes;
     const ee_byte_t grp1_pb = distate->active_prefixes.grp_prefixes[0];
@@ -2250,7 +2251,7 @@ ee_size_t ee_prv_x86_identify_grp1_printable_prefixes(ee_prv_x86_state_t* distat
     return prefix_index;
 }
 
-ee_size_t ee_prv_x86_identify_grp2_printable_prefixes(ee_prv_x86_state_t* distate, ee_size_t prefix_index) {
+static ee_size_t ee_prv_x86_identify_grp2_printable_prefixes(ee_prv_x86_state_t* distate, ee_size_t prefix_index) {
 
     if (prefix_index >= EE_GET_ARRAY_LEN(distate->final_prefixes.printable_prefixes))
         return prefix_index;
@@ -2275,7 +2276,7 @@ ee_size_t ee_prv_x86_identify_grp2_printable_prefixes(ee_prv_x86_state_t* distat
     return prefix_index;
 }
 
-void ee_prv_x86_identify_printable_prefixes(ee_prv_x86_state_t* distate) {
+static void ee_prv_x86_identify_printable_prefixes(ee_prv_x86_state_t* distate) {
 
     /* Must only be called AFTER operands have been collected.
     */
@@ -2289,7 +2290,7 @@ void ee_prv_x86_identify_printable_prefixes(ee_prv_x86_state_t* distate) {
     distate->final_prefixes.num_printable_prefixes = prefix_index;
 }
 
-ee_x86_instruction_type_t ee_prv_x86_lookup_instruction_pseudonym(ee_x86_instruction_type_t inst, ee_uint8_t selector) {
+static ee_x86_instruction_type_t ee_prv_x86_lookup_instruction_pseudonym(ee_x86_instruction_type_t inst, ee_uint8_t selector) {
 
     const ee_x86_instruction_type_t* pseudonyms = 0;
     ee_size_t num_pseudonyms = 0;
@@ -2299,49 +2300,49 @@ ee_x86_instruction_type_t ee_prv_x86_lookup_instruction_pseudonym(ee_x86_instruc
     case EE_X86_INSTRUCTION_CMPPS:
 
         pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPPS;
-        num_pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPPS_COUNT;
+        num_pseudonyms = EE_GET_ARRAY_LEN(EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPPS);
         break;
 
     case EE_X86_INSTRUCTION_CMPPD:
 
         pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPPD;
-        num_pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPPD_COUNT;
+        num_pseudonyms = EE_GET_ARRAY_LEN(EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPPD);
         break;
 
     case EE_X86_INSTRUCTION_CMPSD:
 
         pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPSD;
-        num_pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPSD_COUNT;
+        num_pseudonyms = EE_GET_ARRAY_LEN(EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPSD);
         break;
 
     case EE_X86_INSTRUCTION_CMPSS:
 
         pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPSS;
-        num_pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPSS_COUNT;
+        num_pseudonyms = EE_GET_ARRAY_LEN(EE_PRV_X86_INSTRUCTION_PSEUDONYMS_CMPSS);
         break;
 
     case EE_X86_INSTRUCTION_VCMPPS:
 
         pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPPS;
-        num_pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPPS_COUNT;
+        num_pseudonyms = EE_GET_ARRAY_LEN(EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPPS);
         break;
 
     case EE_X86_INSTRUCTION_VCMPPD:
 
         pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPPD;
-        num_pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPPD_COUNT;
+        num_pseudonyms = EE_GET_ARRAY_LEN(EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPPD);
         break;
 
     case EE_X86_INSTRUCTION_VCMPSD:
 
         pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPSD;
-        num_pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPSD_COUNT;
+        num_pseudonyms = EE_GET_ARRAY_LEN(EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPSD);
         break;
 
     case EE_X86_INSTRUCTION_VCMPSS:
 
         pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPSS;
-        num_pseudonyms = EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPSS_COUNT;
+        num_pseudonyms = EE_GET_ARRAY_LEN(EE_PRV_X86_INSTRUCTION_PSEUDONYMS_VCMPSS);
         break;
 
     default:
@@ -2355,7 +2356,7 @@ ee_x86_instruction_type_t ee_prv_x86_lookup_instruction_pseudonym(ee_x86_instruc
     return pseudonyms[selector];
 }
 
-ee_bool_t ee_prv_x86_state_pseudonymize(ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_pseudonymize(ee_prv_x86_state_t* distate) {
 
     ee_x86_instruction_type_t pseudonym = EE_X86_INSTRUCTION_NOT_EXISTING;
     ee_size_t new_num_operands = 0;
@@ -2382,7 +2383,7 @@ ee_bool_t ee_prv_x86_state_pseudonymize(ee_prv_x86_state_t* distate) {
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86_state_process_operand_bytes_wrapped(ee_prv_x86_state_t* distate) {
+static ee_bool_t ee_prv_x86_state_process_operand_bytes_wrapped(ee_prv_x86_state_t* distate) {
 
     if (!distate->process_operand_bytes)
         return EE_TRUE;

@@ -7,39 +7,39 @@
 
 #include "ee/detail/x86/modrm_tables.h"
 
-const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EAX = {
+static const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EAX = {
     0, EE_X86_GPP_REGISTER_AL, EE_X86_GPP_REGISTER_AX, EE_X86_GPP_REGISTER_EAX, EE_X86_GPP_REGISTER_RAX
 };
 
-const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_ECX = {
+static const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_ECX = {
     1, EE_X86_GPP_REGISTER_CL, EE_X86_GPP_REGISTER_CX, EE_X86_GPP_REGISTER_ECX, EE_X86_GPP_REGISTER_RCX
 };
 
-const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EDX = {
+static const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EDX = {
     2, EE_X86_GPP_REGISTER_DL, EE_X86_GPP_REGISTER_DX, EE_X86_GPP_REGISTER_EDX, EE_X86_GPP_REGISTER_RDX
 };
 
-const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EBX = {
+static const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EBX = {
     3, EE_X86_GPP_REGISTER_BL, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_EBX, EE_X86_GPP_REGISTER_RBX
 };
 
-const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_ESP = {
+static const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_ESP = {
     4, EE_X86_GPP_REGISTER_AH, EE_X86_GPP_REGISTER_SP, EE_X86_GPP_REGISTER_ESP, EE_X86_GPP_REGISTER_RSP
 };
 
-const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EBP = {
+static const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EBP = {
     5, EE_X86_GPP_REGISTER_CH, EE_X86_GPP_REGISTER_BP, EE_X86_GPP_REGISTER_EBP, EE_X86_GPP_REGISTER_RBP
 };
 
-const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_ESI = {
+static const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_ESI = {
     6, EE_X86_GPP_REGISTER_DH, EE_X86_GPP_REGISTER_SI, EE_X86_GPP_REGISTER_ESI, EE_X86_GPP_REGISTER_RSI
 };
 
-const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EDI = {
+static const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EDI = {
     7, EE_X86_GPP_REGISTER_BH, EE_X86_GPP_REGISTER_DI, EE_X86_GPP_REGISTER_EDI, EE_X86_GPP_REGISTER_RDI
 };
 
-const ee_prv_x86_modrm_reg_pack_t* EE_PRV_X86_MODRM_REG_PACKS[] = {
+static const ee_prv_x86_modrm_reg_pack_t* EE_PRV_X86_MODRM_REG_PACKS[] = {
     &EE_PRV_X86_MODRM_REG_PACK_EAX,
     &EE_PRV_X86_MODRM_REG_PACK_ECX,
     &EE_PRV_X86_MODRM_REG_PACK_EDX,
@@ -50,21 +50,19 @@ const ee_prv_x86_modrm_reg_pack_t* EE_PRV_X86_MODRM_REG_PACKS[] = {
     &EE_PRV_X86_MODRM_REG_PACK_EDI
 };
 
-const ee_size_t EE_PRV_X86_MODRM_REG_PACKS_COUNT = EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM_REG_PACKS);
-
 /* 16-bit ModR/M table
 */
 
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BX_SI = { &EE_PRV_X86_MODRM_REG_PACK_EBX, &EE_PRV_X86_MODRM_REG_PACK_ESI };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BX_DI = { &EE_PRV_X86_MODRM_REG_PACK_EBX, &EE_PRV_X86_MODRM_REG_PACK_EDI };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BP_SI = { &EE_PRV_X86_MODRM_REG_PACK_EBP, &EE_PRV_X86_MODRM_REG_PACK_ESI };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BP_DI = { &EE_PRV_X86_MODRM_REG_PACK_EBP, &EE_PRV_X86_MODRM_REG_PACK_EDI };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_SI = { &EE_PRV_X86_MODRM_REG_PACK_ESI };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_DI = { &EE_PRV_X86_MODRM_REG_PACK_EDI };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BP = { &EE_PRV_X86_MODRM_REG_PACK_EBP };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BX = { &EE_PRV_X86_MODRM_REG_PACK_EBX };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BX_SI = { &EE_PRV_X86_MODRM_REG_PACK_EBX, &EE_PRV_X86_MODRM_REG_PACK_ESI };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BX_DI = { &EE_PRV_X86_MODRM_REG_PACK_EBX, &EE_PRV_X86_MODRM_REG_PACK_EDI };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BP_SI = { &EE_PRV_X86_MODRM_REG_PACK_EBP, &EE_PRV_X86_MODRM_REG_PACK_ESI };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BP_DI = { &EE_PRV_X86_MODRM_REG_PACK_EBP, &EE_PRV_X86_MODRM_REG_PACK_EDI };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_SI = { &EE_PRV_X86_MODRM_REG_PACK_ESI };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_DI = { &EE_PRV_X86_MODRM_REG_PACK_EDI };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BP = { &EE_PRV_X86_MODRM_REG_PACK_EBP };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM16_BX = { &EE_PRV_X86_MODRM_REG_PACK_EBX };
 
-const ee_prv_x86_modrm_mapping_t EE_PRV_X86_MODRM16_TABLE[] = {
+static const ee_prv_x86_modrm_mapping_t EE_PRV_X86_MODRM16_TABLE[] = {
 
     /* 00h-3Fh; [...]+disp0; [BP] replaced by disp16
     */
@@ -339,21 +337,19 @@ const ee_prv_x86_modrm_mapping_t EE_PRV_X86_MODRM16_TABLE[] = {
     { { EE_PRV_X86_EFFADDR_REG, { 0 }, &EE_PRV_X86_MODRM_REG_PACK_EDI }, &EE_PRV_X86_MODRM_REG_PACK_EDI }
 };
 
-const ee_size_t EE_PRV_X86_MODRM16_TABLE_COUNT = EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM16_TABLE);
-
 /* 32-bit ModR/M table
 */
 
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_EAX = { &EE_PRV_X86_MODRM_REG_PACK_EAX };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_ECX = { &EE_PRV_X86_MODRM_REG_PACK_ECX };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_EDX = { &EE_PRV_X86_MODRM_REG_PACK_EDX };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_EBX = { &EE_PRV_X86_MODRM_REG_PACK_EBX };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_SIB = { 0 };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_EBP = { &EE_PRV_X86_MODRM_REG_PACK_EBP };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_ESI = { &EE_PRV_X86_MODRM_REG_PACK_ESI };
-const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_EDI = { &EE_PRV_X86_MODRM_REG_PACK_EDI };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_EAX = { &EE_PRV_X86_MODRM_REG_PACK_EAX };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_ECX = { &EE_PRV_X86_MODRM_REG_PACK_ECX };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_EDX = { &EE_PRV_X86_MODRM_REG_PACK_EDX };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_EBX = { &EE_PRV_X86_MODRM_REG_PACK_EBX };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_SIB = { 0 };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_EBP = { &EE_PRV_X86_MODRM_REG_PACK_EBP };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_ESI = { &EE_PRV_X86_MODRM_REG_PACK_ESI };
+static const ee_prv_x86_modrm_reg_pair_t EE_PRV_X86_MODRM32_EDI = { &EE_PRV_X86_MODRM_REG_PACK_EDI };
 
-const ee_prv_x86_modrm_mapping_t EE_PRV_X86_MODRM32_TABLE[] = {
+static const ee_prv_x86_modrm_mapping_t EE_PRV_X86_MODRM32_TABLE[] = {
 
     /* 00h-3Fh; [...]+disp0; [EBP] replaced by disp32
     */
@@ -628,12 +624,10 @@ const ee_prv_x86_modrm_mapping_t EE_PRV_X86_MODRM32_TABLE[] = {
     { { EE_PRV_X86_EFFADDR_REG, { 0 }, &EE_PRV_X86_MODRM_REG_PACK_EDI }, &EE_PRV_X86_MODRM_REG_PACK_EDI }
 };
 
-const ee_size_t EE_PRV_X86_MODRM32_TABLE_COUNT = EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM32_TABLE);
-
 /* 32-bit ModR/M SIB table
 */
 
-const ee_prv_x86_modrm32_sib_mapping_t EE_PRV_X86_MODRM32_SIB_TABLE[] = {
+static const ee_prv_x86_modrm32_sib_mapping_t EE_PRV_X86_MODRM32_SIB_TABLE[] = {
 
     /* 00h-3Fh; scaling factor 1
     */
@@ -908,12 +902,10 @@ const ee_prv_x86_modrm32_sib_mapping_t EE_PRV_X86_MODRM32_SIB_TABLE[] = {
     { &EE_PRV_X86_MODRM_REG_PACK_EDI, &EE_PRV_X86_MODRM_REG_PACK_EDI, 8 }
 };
 
-const ee_size_t EE_PRV_X86_MODRM32_SIB_TABLE_COUNT = EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM32_SIB_TABLE);
-
 /* 32-bit ModR/M VSIB table
 */
 
-const ee_prv_x86_modrm32_sib_mapping_t EE_PRV_X86_MODRM32_VSIB_TABLE[] = {
+static const ee_prv_x86_modrm32_sib_mapping_t EE_PRV_X86_MODRM32_VSIB_TABLE[] = {
 
     /* 00h-3Fh; scaling factor 1
     */
@@ -1187,7 +1179,5 @@ const ee_prv_x86_modrm32_sib_mapping_t EE_PRV_X86_MODRM32_VSIB_TABLE[] = {
     { &EE_PRV_X86_MODRM_REG_PACK_ESI, &EE_PRV_X86_MODRM_REG_PACK_EDI, 8 },
     { &EE_PRV_X86_MODRM_REG_PACK_EDI, &EE_PRV_X86_MODRM_REG_PACK_EDI, 8 }
 };
-
-const ee_size_t EE_PRV_X86_MODRM32_VSIB_TABLE_COUNT = EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM32_VSIB_TABLE);
 
 #endif

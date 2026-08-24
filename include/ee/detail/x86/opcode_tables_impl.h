@@ -7,105 +7,107 @@
 
 #include "ee/detail/x86/constants.h"
 #include "ee/detail/x86/opcode_tables.h"
-#include "ee/detail/x86/operand_processors.h"
+#include "ee/detail/x86/operand_constraints_impl.h"
+#include "ee/detail/x86/operand_processors_impl.h"
+#include "ee/detail/x86/prefix_constraints_impl.h"
 
 /* Opcode identity lists
 */
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_00[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_00[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADD, 0, ee_prv_x86_process_operands_modrm_rm8_r8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPSHUFB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F3A_W1_NVVVV.hdr, EE_X86_INSTRUCTION_VPERMQ, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_01[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_01[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADD, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPHADDW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F3A_W1_NVVVV.hdr, EE_X86_INSTRUCTION_VPERMPD, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_02[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_02[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADD, 0, ee_prv_x86_process_operands_modrm_r8_rm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPHADDD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A_W0.hdr, EE_X86_INSTRUCTION_VPBLENDD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_03[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_03[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADD, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPHADDSW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_04[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_04[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADD, 0, ee_prv_x86_process_operands_al_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMADDUBSW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VPERMILPS, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8}
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_05[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_05[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADD, 0, ee_prv_x86_process_operands_axOeaxOraxPREF_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPHSUBW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VPERMILPD, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_06[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_06[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_es },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPHSUBD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F3A_W0.hdr, EE_X86_INSTRUCTION_VPERM2F128, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_07[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_07[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_es },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPHSUBSW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_08[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_08[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OR, 0, ee_prv_x86_process_operands_modrm_rm8_r8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPSIGNB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A_NVVVV.hdr, EE_X86_INSTRUCTION_VROUNDPS, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_09[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_09[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OR, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPSIGNW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A_NVVVV.hdr, EE_X86_INSTRUCTION_VROUNDPD, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OR, 0, ee_prv_x86_process_operands_modrm_r8_rm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPSIGND, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A.hdr, EE_X86_INSTRUCTION_VROUNDSS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OR, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMULHRSW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A.hdr, EE_X86_INSTRUCTION_VROUNDSD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OR, 0, ee_prv_x86_process_operands_al_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VPERMILPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A.hdr, EE_X86_INSTRUCTION_VBLENDPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OR, 0, ee_prv_x86_process_operands_axOeaxOraxPREF_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VPERMILPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A.hdr, EE_X86_INSTRUCTION_VBLENDPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0E[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_cs },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VTESTPS, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A.hdr, EE_X86_INSTRUCTION_VPBLENDW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VTESTPD, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A.hdr, EE_X86_INSTRUCTION_VPALIGNR, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_00[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_00[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SLDT, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_r16x32x64m16 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_STR, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_r16x32x64m16 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LLDT, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm16 },
@@ -114,7 +116,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_00[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_VERW, &EE_PRV_X86_OPRDCONS_MODRM_REG5.hdr, ee_prv_x86_process_operands_modrm_rm16 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_01[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_01[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SGDT, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_m48x80MODE },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SIDT, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_m48x80MODE },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LGDT, &EE_PRV_X86_OPRDCONS_MODRM_REG2M.hdr, ee_prv_x86_process_operands_modrm_m48x80MODE },
@@ -170,59 +172,59 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_01[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_PSMASH, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_FF.hdr, ee_prv_x86_process_operands_axOeaxOraxMODEpASO }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_02[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_02[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LAR, 0, ee_prv_x86_process_operands_modrm_r16x32x64_r16x32x64m16 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_03[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_03[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LSL, 0, ee_prv_x86_process_operands_modrm_r16x32x64_r16x32x64m16 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_05[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_05[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SYSCALL }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_06[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_06[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CLTS }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_07[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_07[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_SYSRET },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_SYSRETQ }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_08[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_08[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_INVD }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_09[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_09[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NF3.hdr, EE_X86_INSTRUCTION_WBINVD },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_WBNOINVD }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_0B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_0B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_UD2 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_0D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_0D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PREFETCHW, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_m8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_10[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_10[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVUPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVUPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_MOVSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_MOVSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_11[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_11[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVUPS, 0, ee_prv_x86_process_operands_modrm_xrm128_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVUPD, 0, ee_prv_x86_process_operands_modrm_xrm128_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_MOVSD, 0, ee_prv_x86_process_operands_modrm_xrm64_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_MOVSS, 0, ee_prv_x86_process_operands_modrm_xrm32_xmm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_12[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_12[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVLPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVHLPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVLPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
@@ -230,41 +232,41 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_12[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_MOVSLDUP, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_13[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_13[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVLPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xrm64_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVLPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xrm64_xmm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_14[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_14[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_UNPCKLPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_UNPCKLPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_15[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_15[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_UNPCKHPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_UNPCKHPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_16[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_16[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVHPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVLHPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVHPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_MOVSHDUP, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_17[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_17[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVHPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xrm64_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVHPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xrm64_xmm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_18[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_18[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PREFETCHNTA, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_m8 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PREFETCHT0, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_m8 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PREFETCHT1, &EE_PRV_X86_OPRDCONS_MODRM_REG2M.hdr, ee_prv_x86_process_operands_modrm_m8 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PREFETCHT2, &EE_PRV_X86_OPRDCONS_MODRM_REG3M.hdr, ee_prv_x86_process_operands_modrm_m8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_BNDLDX, &EE_PRV_X86_OPRDCONS_MODRM_REG0XX_M.hdr, ee_prv_x86_process_operands_modrm_bnd_rm32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_BNDMOV, &EE_PRV_X86_OPRDCONS_MODRM_REG0XX_M.hdr, ee_prv_x86_process_operands_modrm_bnd_brm64x128MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_BNDMOV, &EE_PRV_X86_OPRDCONS_MODRM_REG0XX_RM0XX_R.hdr, ee_prv_x86_process_operands_modrm_bnd_brm64x128MODE },
@@ -274,7 +276,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_BNDCL, &EE_PRV_X86_OPRDCONS_MODRM_REG0XX_RM0XX_R.hdr, ee_prv_x86_process_operands_modrm_bnd_rm32x64MODE }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_BNDSTX, &EE_PRV_X86_OPRDCONS_MODRM_REG0XX_M.hdr, ee_prv_x86_process_operands_modrm_rm32x64MODE_bnd },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_BNDMOV, &EE_PRV_X86_OPRDCONS_MODRM_REG0XX_M.hdr, ee_prv_x86_process_operands_modrm_brm64x128MODE_bnd },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_BNDMOV, &EE_PRV_X86_OPRDCONS_MODRM_REG0XX_RM0XX_R.hdr, ee_prv_x86_process_operands_modrm_brm64x128MODE_bnd },
@@ -283,736 +285,736 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_BNDMK, &EE_PRV_X86_OPRDCONS_MODRM_REG0XX_M.hdr, ee_prv_x86_process_operands_modrm_bnd_rm32x64MODE }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_CLDEMOTE, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_RDSSPD, &EE_PRV_X86_OPRDCONS_MODRM_REG1R.hdr, ee_prv_x86_process_operands_modrm_rm32x64 },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_GRP_F3_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_RDSSPQ, &EE_PRV_X86_OPRDCONS_MODRM_REG1R.hdr, ee_prv_x86_process_operands_modrm_rm32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_ENDBR64, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_FA.hdr },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_ENDBR32, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_FB.hdr }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_1F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_NOP, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_20[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_20[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32x64MODE_cr }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_21[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_21[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32x64MODE_dr }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_22[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_22[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_cr_r32x64MODE }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_23[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_23[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_dr_r32x64MODE }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_28[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_28[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVAPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVAPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_29[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_29[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVAPS, 0, ee_prv_x86_process_operands_modrm_xrm128_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVAPD, 0, ee_prv_x86_process_operands_modrm_xrm128_xmm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_CVTPI2PS, 0, ee_prv_x86_process_operands_modrm_xmm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_CVTPI2PD, 0, ee_prv_x86_process_operands_modrm_xmm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_CVTSI2SD, 0, ee_prv_x86_process_operands_modrm_xmm_rm32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_CVTSI2SS, 0, ee_prv_x86_process_operands_modrm_xmm_rm32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVNTPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xrm128_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVNTPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xrm128_xmm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_CVTTPS2PI, 0, ee_prv_x86_process_operands_modrm_mm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_CVTTPD2PI, 0, ee_prv_x86_process_operands_modrm_mm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_CVTTSD2SI, 0, ee_prv_x86_process_operands_modrm_r32x64_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_CVTTSS2SI, 0, ee_prv_x86_process_operands_modrm_r32x64_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_CVTPS2PI, 0, ee_prv_x86_process_operands_modrm_mm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_CVTPD2PI, 0, ee_prv_x86_process_operands_modrm_mm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_CVTSD2SI, 0, ee_prv_x86_process_operands_modrm_r32x64_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_CVTSS2SI, 0, ee_prv_x86_process_operands_modrm_r32x64_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_UCOMISS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_UCOMISD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_2F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_COMISS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_COMISD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_30[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_30[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_WRMSR }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_31[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_31[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RDTSC }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_32[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_32[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RDMSR }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_33[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_33[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RDPMC }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_34[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_34[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SYSENTER }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_35[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_35[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SYSEXIT }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_37[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_37[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_GETSEC }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_00[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_00[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSHUFB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSHUFB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_01[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_01[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PHADDW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PHADDW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_02[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_02[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PHADDD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PHADDD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_03[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_03[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PHADDSW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PHADDSW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_04[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_04[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMADDUBSW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMADDUBSW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_05[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_05[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PHSUBW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PHSUBW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_06[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_06[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PHSUBD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PHSUBD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_07[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_07[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PHSUBSW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PHSUBSW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_08[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_08[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSIGNB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSIGNB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_09[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_09[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSIGNW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSIGNW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_0A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_0A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSIGND, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSIGND, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_0B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_0B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMULHRSW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMULHRSW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_10[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_10[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PBLENDVB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_xmm0 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_14[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_14[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_BLENDVPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_xmm0 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_15[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_15[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_BLENDVPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_xmm0 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_17[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_17[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PTEST, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_1C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_1C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PABSB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PABSB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_1D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_1D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PABSW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PABSW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_1E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_1E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PABSD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PABSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_20[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_20[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVSXBW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_21[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_21[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVSXBD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_22[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_22[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVSXBQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm16 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_23[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_23[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVSXWD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_24[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_24[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVSXWQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_25[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_25[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVSXDQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_28[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_28[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMULDQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_29[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_29[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPEQQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_2A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_2A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVNTDQA, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_2B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_2B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PACKUSDW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_30[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_30[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVZXBW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_31[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_31[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVZXBD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_32[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_32[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVZXBQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm16 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_33[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_33[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVZXWD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_34[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_34[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVZXWQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_35[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_35[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVZXDQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_37[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_37[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPGTQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_38[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_38[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMINSB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_39[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_39[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMINSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_3A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_3A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMINUW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_3B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_3B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMINUD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_3E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_3E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMAXUW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_3F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_3F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMAXUD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_40[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_40[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMULLD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_41[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_41[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PHMINPOSUW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_80[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_80[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_INVEPT, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r32x64MODE_m128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_81[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_81[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_INVVPID, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r32x64MODE_m128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_82[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_82[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_INVPCID, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r32x64MODE_m128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_C8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_C8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_SHA1NEXTE, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_C9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_C9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_SHA1MSG1, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_CA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_CA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_SHA1MSG2, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_CB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_CB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_SHA256RNDS2, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_xmm0 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_CC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_CC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_SHA256MSG1, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_CD[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_CD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_SHA256MSG2, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_DB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_DB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_AESIMC, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_DC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_DC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_AESENC, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_DD[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_DD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_AESENCLAST, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_DE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_DE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_AESDEC, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_DF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_DF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_AESDECLAST, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_F0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_F0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVBE, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_CRC32, 0, ee_prv_x86_process_operands_modrm_r32x64_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_F1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_F1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVBE, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_CRC32, 0, ee_prv_x86_process_operands_modrm_r32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_F6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_F6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_ADCX, 0, ee_prv_x86_process_operands_modrm_r32x64_rm32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_ADOX, 0, ee_prv_x86_process_operands_modrm_r32x64_rm32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_F8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_F8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVDIR64B, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r16x32x64MODEpASO_m512 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_ENQCMD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r16x32x64MODEpASO_m512 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_ENQCMDS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r16x32x64MODEpASO_m512 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_F9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_38_F9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVDIRI, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_m32x64_r32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_08[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_08[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_ROUNDPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_09[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_09[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_ROUNDPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_ROUNDSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_ROUNDSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_BLENDPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_BLENDPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PBLENDW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_0F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PALIGNR, 0, ee_prv_x86_process_operands_modrm_mm_mrm64_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PALIGNR, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_14[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_14[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PEXTRB, 0, ee_prv_x86_process_operands_modrm_r32x64m8_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_15[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_15[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PEXTRW, 0, ee_prv_x86_process_operands_modrm_r32x64m16_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_16[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_16[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_PEXTRD, 0, ee_prv_x86_process_operands_modrm_rm32x64_xmm_imm8 },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_PEXTRQ, 0, ee_prv_x86_process_operands_modrm_rm32x64_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_17[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_17[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_EXTRACTPS, 0, ee_prv_x86_process_operands_modrm_r32x64m32_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_20[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_20[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PINSRB, 0, ee_prv_x86_process_operands_modrm_xmm_r32m8_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_21[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_21[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_INSERTPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_22[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_22[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_PINSRD, 0, ee_prv_x86_process_operands_modrm_xmm_rm32x64_imm8 },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_PINSRQ, 0, ee_prv_x86_process_operands_modrm_xmm_rm32x64_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_40[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_40[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_DPPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_41[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_41[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_DPPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_42[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_42[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MPSADBW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_44[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_44[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCLMULQDQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_60[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_60[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPESTRM, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_61[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_61[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPESTRI, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_62[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_62[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPISTRM, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_63[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_63[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPISTRI, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_CC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_CC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_SHA1RNDS4, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_DF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_DF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_AESKEYGENASSIST, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_40[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_40[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVO, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_41[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_41[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVNO, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_42[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_42[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVB, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_43[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_43[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVAE, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_44[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_44[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVE, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_45[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_45[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVNE, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_46[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_46[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVBE, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_47[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_47[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVA, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_48[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_48[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVS, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_49[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_49[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVNS, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVP, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVNP, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVL, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVGE, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVLE, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_4F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMOVG, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_50[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_50[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVMSKPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVMSKPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32_xmm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_51[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_51[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_SQRTPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_SQRTPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_SQRTSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_SQRTSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_52[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_52[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_RSQRTPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_RSQRTSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_53[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_53[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_RCPPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_RCPSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_54[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_54[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_ANDPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_ANDPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_55[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_55[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_ANDNPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_ANDNPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_56[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_56[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_ORPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_ORPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_57[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_57[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_XORPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_XORPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_58[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_58[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_ADDPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_ADDPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_ADDSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_ADDSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_59[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_59[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MULPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MULPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_MULSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_MULSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_CVTPS2PD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_CVTPD2PS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_CVTSD2SS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_CVTSS2SD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_CVTDQ2PS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_CVTPS2DQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_CVTTPS2DQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_SUBPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_SUBPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_SUBSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_SUBSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MINPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MINPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_MINSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_MINSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_DIVPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_DIVPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_DIVSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_DIVSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_5F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MAXPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MAXPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_MAXSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_MAXSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_60[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_60[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PUNPCKLBW, 0, ee_prv_x86_process_operands_modrm_mm_mrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PUNPCKLBW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_61[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_61[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PUNPCKLWD, 0, ee_prv_x86_process_operands_modrm_mm_mrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PUNPCKLWD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_62[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_62[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PUNPCKLDQ, 0, ee_prv_x86_process_operands_modrm_mm_mrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PUNPCKLDQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_63[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_63[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PACKSSWB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PACKSSWB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_64[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_64[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PCMPGTB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPGTB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_65[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_65[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PCMPGTW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPGTW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_66[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_66[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PCMPGTD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPGTD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_67[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_67[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PACKUSWB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PACKUSWB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_68[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_68[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PUNPCKHBW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PUNPCKHBW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_69[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_69[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PUNPCKHWD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PUNPCKHWD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PUNPCKHDQ, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PUNPCKHDQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PACKSSDW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PACKSSDW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PUNPCKLQDQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PUNPCKHQDQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_MOVD, 0, ee_prv_x86_process_operands_modrm_mm_rm32x64 },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_GRP_NP_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_MOVQ, 0, ee_prv_x86_process_operands_modrm_mm_rm32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_MOVD, 0, ee_prv_x86_process_operands_modrm_xmm_rm32x64 },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_MOVQ, 0, ee_prv_x86_process_operands_modrm_xmm_rm32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_6F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVQ, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVDQA, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_MOVDQU, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_70[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_70[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSHUFW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSHUFD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_PSHUFLW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_PSHUFHW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_71[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_71[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSRLW, &EE_PRV_X86_OPRDCONS_MODRM_REG2R.hdr, ee_prv_x86_process_operands_modrm_mm_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSRLW, &EE_PRV_X86_OPRDCONS_MODRM_REG2R.hdr, ee_prv_x86_process_operands_modrm_xmm_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSRAW, &EE_PRV_X86_OPRDCONS_MODRM_REG4R.hdr, ee_prv_x86_process_operands_modrm_mm_imm8 },
@@ -1021,7 +1023,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_71[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSLLW, &EE_PRV_X86_OPRDCONS_MODRM_REG6R.hdr, ee_prv_x86_process_operands_modrm_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_72[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_72[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSRLD, &EE_PRV_X86_OPRDCONS_MODRM_REG2R.hdr, ee_prv_x86_process_operands_modrm_mm_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSRLD, &EE_PRV_X86_OPRDCONS_MODRM_REG2R.hdr, ee_prv_x86_process_operands_modrm_xmm_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSRAD, &EE_PRV_X86_OPRDCONS_MODRM_REG4R.hdr, ee_prv_x86_process_operands_modrm_mm_imm8 },
@@ -1030,7 +1032,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_72[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSLLD, &EE_PRV_X86_OPRDCONS_MODRM_REG6R.hdr, ee_prv_x86_process_operands_modrm_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_73[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_73[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSRLQ, &EE_PRV_X86_OPRDCONS_MODRM_REG2R.hdr, ee_prv_x86_process_operands_modrm_mm_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSRLQ, &EE_PRV_X86_OPRDCONS_MODRM_REG2R.hdr, ee_prv_x86_process_operands_modrm_xmm_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSRLDQ, &EE_PRV_X86_OPRDCONS_MODRM_REG3R.hdr, ee_prv_x86_process_operands_modrm_xmm_imm8 },
@@ -1039,44 +1041,44 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_73[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSLLDQ, &EE_PRV_X86_OPRDCONS_MODRM_REG7R.hdr, ee_prv_x86_process_operands_modrm_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_74[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_74[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PCMPEQB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPEQB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_75[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_75[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PCMPEQW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPEQW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_76[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_76[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PCMPEQD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PCMPEQD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_77[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_77[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_EMMS, 0, 0 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_78[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_78[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_VMREAD, 0, ee_prv_x86_process_operands_modrm_rm32x64MODE_r32x64MODE }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_79[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_79[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_VMWRITE, 0, ee_prv_x86_process_operands_modrm_r32x64MODE_rm32x64MODE }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_7C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_7C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_HADDPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_HADDPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_7D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_7D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_HSUBPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_HSUBPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_7E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_7E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_MOVD, 0, ee_prv_x86_process_operands_modrm_rm32x64_mm },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_GRP_NP_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_MOVQ, 0, ee_prv_x86_process_operands_modrm_rm32x64_mm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_MOVD, 0, ee_prv_x86_process_operands_modrm_rm32x64_xmm },
@@ -1084,189 +1086,189 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_7E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_MOVQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_7F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_7F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVQ, 0, ee_prv_x86_process_operands_modrm_mrm64_mm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVDQA, 0, ee_prv_x86_process_operands_modrm_xrm128_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_MOVDQU, 0, ee_prv_x86_process_operands_modrm_xrm128_xmm },
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_80[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_80[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JO, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_81[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_81[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JNO, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_82[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_82[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JB, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_83[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_83[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JAE, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_84[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_84[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JE, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_85[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_85[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JNE, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_86[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_86[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JBE, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_87[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_87[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JA, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_88[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_88[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JS, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_89[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_89[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JNS, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JP, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JNP, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JL, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JGE, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JLE, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_8F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JG, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_90[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_90[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETO, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_91[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_91[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETNO, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_92[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_92[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETB, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_93[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_93[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETAE, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_94[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_94[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETE, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_95[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_95[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETNE, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_96[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_96[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETBE, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_97[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_97[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETA, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_98[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_98[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETS, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_99[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_99[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETNS, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETP, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETNP, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETL, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETGE, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETLE, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_9F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SETG, 0, ee_prv_x86_process_operands_modrm_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_fs }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_fs }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A2[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CPUID }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A3[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A3[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_BT, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A4[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A4[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SHLD, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A5[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SHLD, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64_cl }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_gs }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_A9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_gs }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RSM, 0, 0 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_BTS, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SHRD, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AD[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SHRD, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64_cl }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_FXSAVE, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_m512 },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_GRP_NP_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_FXSAVE64, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_m512 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_FXRSTOR, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_m512 },
@@ -1297,110 +1299,110 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_UMONITOR, &EE_PRV_X86_OPRDCONS_MODRM_REG6R.hdr, ee_prv_x86_process_operands_modrm_r16x32x64MODEpASO }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_AF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_IMUL, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMPXCHG, 0, ee_prv_x86_process_operands_modrm_rm8_r8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMPXCHG, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B2[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LSS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r16x32x64_m32x48x80 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B3[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B3[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_BTR, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B4[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B4[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LFS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r16x32x64_m32x48x80 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B5[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LGS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r16x32x64_m32x48x80 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOVZX, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B7[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOVZX, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_B8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_POPCNT, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_BT, &EE_PRV_X86_OPRDCONS_MODRM_REG4.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_BTS, &EE_PRV_X86_OPRDCONS_MODRM_REG5.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_BTR, &EE_PRV_X86_OPRDCONS_MODRM_REG6.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_BTC, &EE_PRV_X86_OPRDCONS_MODRM_REG7.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_BTC, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NF3.hdr, EE_X86_INSTRUCTION_BSF, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_TZCNT, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BD[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NFX.hdr, EE_X86_INSTRUCTION_BSR, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_LZCNT, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOVSX, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_BF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOVSX, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XADD, 0, ee_prv_x86_process_operands_modrm_rm8_r8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XADD, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C2[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_CMPPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_PSEUDONYMIZATION },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_CMPPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_PSEUDONYMIZATION },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_CMPSD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64_imm8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_PSEUDONYMIZATION },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_CMPSS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32_imm8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_PSEUDONYMIZATION }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C3[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C3[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVNTI, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_m32x64_r32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C4[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C4[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PINSRW, 0, ee_prv_x86_process_operands_modrm_mm_r32m16_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PINSRW, 0, ee_prv_x86_process_operands_modrm_xmm_r32m16_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C5[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PEXTRW, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32x64_mm_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PEXTRW, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32x64_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_SHUFPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_SHUFPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_xmm_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C7[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_CMPXCHG8B, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_m64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_CMPXCHG16B, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_m128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_VMPTRLD, &EE_PRV_X86_OPRDCONS_MODRM_REG6M.hdr, ee_prv_x86_process_operands_modrm_m64 },
@@ -1419,247 +1421,247 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_RDPID, &EE_PRV_X86_OPRDCONS_MODRM_REG7R.hdr, ee_prv_x86_process_operands_modrm_r32x64MODE }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C8tCF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_C8tCF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_BSWAP, 0, ee_prv_x86_process_operands_plusr_r16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_ADDSUBPD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_ADDSUBPS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSRLW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSRLW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D2[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSRLD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSRLD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D3[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D3[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSRLQ, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSRLQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D4[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D4[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PADDQ, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PADDQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D5[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMULLW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMULLW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVQ, 0, ee_prv_x86_process_operands_modrm_xrm64_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_MOVDQ2Q, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_mm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_MOVQ2DQ, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_xmm_mrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D7[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMOVMSKB, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32x64_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMOVMSKB, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32x64_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSUBUSB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSUBUSB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_D9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSUBUSW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSUBUSW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMINUB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMINUB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PAND, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PAND, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PADDUSB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PADDUSB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DD[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PADDUSW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PADDUSW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMAXUB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMAXUB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_DF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PANDN, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PANDN, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PAVGB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PAVGB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSRAW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSRAW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E2[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSRAD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSRAD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E3[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E3[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PAVGW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PAVGW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E4[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E4[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMULHUW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMULHUW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E5[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMULHW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMULHW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_CVTTPD2DQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_CVTPD2DQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_CVTDQ2PD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E7[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MOVNTQ, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_mrm64_mm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MOVNTDQ, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xrm128_xmm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSUBSB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSUBSB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_E9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSUBSW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSUBSW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_EA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_EA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMINSW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMINSW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_EB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_EB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_POR, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_POR, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_EC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_EC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PADDSB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PADDSB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_ED[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_ED[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PADDSW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PADDSW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_EE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_EE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMAXSW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMAXSW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_EF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_EF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PXOR, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PXOR, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F2.hdr, EE_X86_INSTRUCTION_LDDQU, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSLLW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSLLW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F2[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSLLD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSLLD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F3[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F3[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSLLQ, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSLLQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F4[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F4[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMULUDQ, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMULUDQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F5[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PMADDWD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PMADDWD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSADBW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSADBW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F7[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_MASKMOVQ, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_MASKMOVDQU, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSUBB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSUBB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_F9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSUBW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSUBW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_FA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_FA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSUBD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSUBD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_FB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_FB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PSUBQ, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PSUBQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_FC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_FC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PADDB, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PADDB, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_FD[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_FD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PADDW, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PADDW, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_FE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_0F_FE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NP.hdr, EE_X86_INSTRUCTION_PADDD, 0, ee_prv_x86_process_operands_modrm_mm_mrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PADDD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_10[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_10[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADC, 0, ee_prv_x86_process_operands_modrm_rm8_r8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVUPS, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVUPD, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
@@ -1669,7 +1671,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_10[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F.hdr, EE_X86_INSTRUCTION_VMOVSS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_11[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_11[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADC, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVUPS, 0, ee_prv_x86_process_operands_modrm_xyrm128x256_xymm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVUPD, 0, ee_prv_x86_process_operands_modrm_xyrm128x256_xymm },
@@ -1679,7 +1681,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_11[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F.hdr, EE_X86_INSTRUCTION_VMOVSS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_xrm128_xmmVVVV_xmm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_12[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_12[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADC, 0, ee_prv_x86_process_operands_modrm_r8_rm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F2_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVDDUP, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm64x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVSLDUP, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
@@ -1688,28 +1690,28 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_12[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F.hdr, EE_X86_INSTRUCTION_VMOVLPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_13[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_13[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADC, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVLPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_rm64_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVLPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_rm64_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTPH2PS, 0, ee_prv_x86_process_operands_modrm_xymm_xrm64x128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_14[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_14[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADC, 0, ee_prv_x86_process_operands_al_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VUNPCKLPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VUNPCKLPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A_W0xIG64_NVVVV.hdr, EE_X86_INSTRUCTION_VPEXTRB, 0, ee_prv_x86_process_operands_modrm_r32m8_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_15[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_15[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADC, 0, ee_prv_x86_process_operands_axOeaxOraxPREF_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VUNPCKHPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VUNPCKHPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VPEXTRW, 0, ee_prv_x86_process_operands_modrm_r32m16_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_16[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_16[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_ss },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVSHDUP, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_NP_0F.hdr, EE_X86_INSTRUCTION_VMOVHPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm64 },
@@ -1720,7 +1722,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_16[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VPERMPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_17[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_17[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_ss },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVHPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_rm64_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVHPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_rm64_xmm },
@@ -1728,306 +1730,306 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_17[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A_NVVVV.hdr, EE_X86_INSTRUCTION_VEXTRACTPS, 0, ee_prv_x86_process_operands_modrm_r32x64m32_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_18[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_18[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SBB, 0, ee_prv_x86_process_operands_modrm_rm8_r8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VBROADCASTSS, 0, ee_prv_x86_process_operands_modrm_xymm_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F3A_W0.hdr, EE_X86_INSTRUCTION_VINSERTF128, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_19[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_19[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SBB, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F38_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VBROADCASTSD, 0, ee_prv_x86_process_operands_modrm_xymm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F3A_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VEXTRACTF128, 0, ee_prv_x86_process_operands_modrm_xrm128_xymm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SBB, 0, ee_prv_x86_process_operands_modrm_r8_rm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F38_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VBROADCASTF128, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xymm_m128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SBB, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SBB, 0, ee_prv_x86_process_operands_al_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPABSB, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SBB, 0, ee_prv_x86_process_operands_axOeaxOraxPREF_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPABSW, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTPS2PH, 0, ee_prv_x86_process_operands_modrm_xrm64x128_xymm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1E[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_ds },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPABSD, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_1F[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_ds }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_20[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_20[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_AND, 0, ee_prv_x86_process_operands_modrm_rm8_r8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVSXBW, 0, ee_prv_x86_process_operands_modrm_xymm_xrm64x128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A_W0xIG64.hdr, EE_X86_INSTRUCTION_VPINSRB, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_r32m8_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_21[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_21[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_AND, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVSXBD, 0, ee_prv_x86_process_operands_modrm_xymm_xrm32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A.hdr, EE_X86_INSTRUCTION_VINSERTPS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_22[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_22[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_AND, 0, ee_prv_x86_process_operands_modrm_r8_rm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVSXBQ, 0, ee_prv_x86_process_operands_modrm_xymm_xrm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A_W0xIG32.hdr, EE_X86_INSTRUCTION_VPINSRD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_rm32_imm8 },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A_W1.hdr, EE_X86_INSTRUCTION_VPINSRQ, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_rm64_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_23[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_23[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_AND, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVSXWD, 0, ee_prv_x86_process_operands_modrm_xymm_xrm64x128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_24[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_24[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_AND, 0, ee_prv_x86_process_operands_al_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVSXWQ, 0, ee_prv_x86_process_operands_modrm_xymm_xrm32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_25[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_25[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_AND, 0, ee_prv_x86_process_operands_axOeaxOraxPREF_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVSXDQ, 0, ee_prv_x86_process_operands_modrm_xymm_xrm64x128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_27[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_27[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_DAA }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_28[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_28[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SUB, 0, ee_prv_x86_process_operands_modrm_rm8_r8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVAPS, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVAPD, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMULDQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_29[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_29[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SUB, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVAPS, 0, ee_prv_x86_process_operands_modrm_xyrm128x256_xymm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVAPD, 0, ee_prv_x86_process_operands_modrm_xyrm128x256_xymm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPCMPEQQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SUB, 0, ee_prv_x86_process_operands_modrm_r8_rm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F2_0F.hdr, EE_X86_INSTRUCTION_VCVTSI2SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_rm32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F.hdr, EE_X86_INSTRUCTION_VCVTSI2SS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_rm32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVNTDQA, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SUB, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVNTPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xyrm128x256_xymm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVNTPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xyrm128x256_xymm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPACKUSDW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SUB, 0, ee_prv_x86_process_operands_al_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F2_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTTSD2SI, 0, ee_prv_x86_process_operands_modrm_r32x64_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTTSS2SI, 0, ee_prv_x86_process_operands_modrm_r32x64_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VMASKMOVPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SUB, 0, ee_prv_x86_process_operands_axOeaxOraxPREF_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F2_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTSD2SI, 0, ee_prv_x86_process_operands_modrm_r32x64_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTSS2SI, 0, ee_prv_x86_process_operands_modrm_r32x64_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VMASKMOVPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VUCOMISS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VUCOMISD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VMASKMOVPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xyrm128x256_xymmVVVV_xymm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_2F[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_DAS },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCOMISS, 0, ee_prv_x86_process_operands_modrm_xmm_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCOMISD, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VMASKMOVPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xyrm128x256_xymmVVVV_xymm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_30[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_30[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XOR, 0, ee_prv_x86_process_operands_modrm_rm8_r8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVZXBW, 0, ee_prv_x86_process_operands_modrm_xymm_xrm64x128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_31[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_31[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XOR, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVZXBD, 0, ee_prv_x86_process_operands_modrm_xymm_xrm32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_32[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_32[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XOR, 0, ee_prv_x86_process_operands_modrm_r8_rm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVZXBQ, 0, ee_prv_x86_process_operands_modrm_xymm_xrm16x32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_33[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_33[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XOR, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVZXWD, 0, ee_prv_x86_process_operands_modrm_xymm_xrm64x128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_34[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_34[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XOR, 0, ee_prv_x86_process_operands_al_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVZXWQ, 0, ee_prv_x86_process_operands_modrm_xymm_xrm32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_35[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_35[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XOR, 0, ee_prv_x86_process_operands_axOeaxOraxPREF_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVZXDQ, 0, ee_prv_x86_process_operands_modrm_xymm_xrm64x128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_36[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_36[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VPERMD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_37[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_37[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_AAA },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPCMPGTQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_38[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_38[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMP, 0, ee_prv_x86_process_operands_modrm_rm8_r8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMINSB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F3A_W0.hdr, EE_X86_INSTRUCTION_VINSERTI128, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xrm128_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_39[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_39[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMP, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMINSD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F3A_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VEXTRACTI128, 0, ee_prv_x86_process_operands_modrm_xrm128_xymm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMP, 0, ee_prv_x86_process_operands_modrm_r8_rm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMINUW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMP, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMINUD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMP, 0, ee_prv_x86_process_operands_al_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMAXSB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMP, 0, ee_prv_x86_process_operands_axOeaxOraxPREF_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMAXSD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMAXUW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_3F[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_AAS },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMAXUD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_40[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_40[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_INC, 0, ee_prv_x86_process_operands_plusr_r16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38.hdr, EE_X86_INSTRUCTION_VPMULLD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A.hdr, EE_X86_INSTRUCTION_VDPPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_41[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_41[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_INC, 0, ee_prv_x86_process_operands_plusr_r16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F38_NVVVV.hdr, EE_X86_INSTRUCTION_VPHMINPOSUW, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A.hdr, EE_X86_INSTRUCTION_VDPPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_42[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_42[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_INC, 0, ee_prv_x86_process_operands_plusr_r16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A.hdr, EE_X86_INSTRUCTION_VMPSADBW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_43[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_43[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_INC, 0, ee_prv_x86_process_operands_plusr_r16x32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_44[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_44[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_INC, 0, ee_prv_x86_process_operands_plusr_r16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A.hdr, EE_X86_INSTRUCTION_VPCLMULQDQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_45[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_45[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_INC, 0, ee_prv_x86_process_operands_plusr_r16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VPSRLVD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VPSRLVQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_46[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_46[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_INC, 0, ee_prv_x86_process_operands_plusr_r16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VPSRAVD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F3A_W0.hdr, EE_X86_INSTRUCTION_VPERM2I128, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_47[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_47[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_INC, 0, ee_prv_x86_process_operands_plusr_r16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VPSLLVD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VPSLLVQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_48[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_48[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_DEC, 0, ee_prv_x86_process_operands_plusr_r16x32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_49[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_49[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_DEC, 0, ee_prv_x86_process_operands_plusr_r16x32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4A[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_DEC, 0, ee_prv_x86_process_operands_plusr_r16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A_W0.hdr, EE_X86_INSTRUCTION_VBLENDVPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_xymmIS4 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4B[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_DEC, 0, ee_prv_x86_process_operands_plusr_r16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A_W0.hdr, EE_X86_INSTRUCTION_VBLENDVPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_xymmIS4 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4C[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_DEC, 0, ee_prv_x86_process_operands_plusr_r16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F3A_W0.hdr, EE_X86_INSTRUCTION_VPBLENDVB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_xymmIS4 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4D[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_DEC, 0, ee_prv_x86_process_operands_plusr_r16x32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4E[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_DEC, 0, ee_prv_x86_process_operands_plusr_r16x32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_4F[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_DEC, 0, ee_prv_x86_process_operands_plusr_r16x32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_50[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_50[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVMSKPS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32_xymm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVMSKPD, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32_xymm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_51[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_51[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VSQRTPS, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VSQRTPD, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
@@ -2035,43 +2037,43 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_51[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F.hdr, EE_X86_INSTRUCTION_VSQRTSS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_52[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_52[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VRSQRTPS, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F.hdr, EE_X86_INSTRUCTION_VRSQRTSS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_53[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_53[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VRCPPS, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F.hdr, EE_X86_INSTRUCTION_VRCPSS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_54[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_54[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VANDPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VANDPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_55[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_55[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VANDNPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VANDNPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_56[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_56[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VORPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VORPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_57[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_57[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VXORPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VXORPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_58[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_58[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VADDPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VADDPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
@@ -2080,7 +2082,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_58[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VPBROADCASTD, 0, ee_prv_x86_process_operands_modrm_xymm_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_59[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_59[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VMULPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VMULPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
@@ -2089,7 +2091,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_59[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VPBROADCASTQ, 0, ee_prv_x86_process_operands_modrm_xymm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTPS2PD, 0, ee_prv_x86_process_operands_modrm_xymm_xrm64x128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTPD2PS, 0, ee_prv_x86_process_operands_modrm_xmm_xyrm128x256 },
@@ -2098,14 +2100,14 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VBROADCASTI128, 0, ee_prv_x86_process_operands_modrm_xymm_m128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTDQ2PS, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTPS2DQ, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTTPS2DQ, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VSUBPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VSUBPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
@@ -2113,7 +2115,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F.hdr, EE_X86_INSTRUCTION_VSUBSS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VMINPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VMINPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
@@ -2121,7 +2123,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F.hdr, EE_X86_INSTRUCTION_VMINSS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VDIVPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VDIVPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
@@ -2129,7 +2131,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F.hdr, EE_X86_INSTRUCTION_VDIVSS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_POP, 0, ee_prv_x86_process_operands_plusr_r16PREFx32x64MODE },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VMAXPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VMAXPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
@@ -2137,113 +2139,113 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_5F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F.hdr, EE_X86_INSTRUCTION_VMAXSS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_60[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_60[] = {
     { EE_PRV_X86_SUPPMOD_32, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_PUSHA },
     { EE_PRV_X86_SUPPMOD_32, &EE_PRV_X86_PREFCONS_GRP_N66.hdr, EE_X86_INSTRUCTION_PUSHAD },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPUNPCKLBW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A_NVVVV.hdr, EE_X86_INSTRUCTION_VPCMPESTRM, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_61[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_61[] = {
     { EE_PRV_X86_SUPPMOD_32, &EE_PRV_X86_PREFCONS_GRP_66.hdr, EE_X86_INSTRUCTION_POPA },
     { EE_PRV_X86_SUPPMOD_32, &EE_PRV_X86_PREFCONS_GRP_N66.hdr, EE_X86_INSTRUCTION_POPAD },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPUNPCKLWD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A_NVVVV.hdr, EE_X86_INSTRUCTION_VPCMPESTRI, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_62[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_62[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_BOUND, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r16x32_m32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPUNPCKLDQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A_NVVVV.hdr, EE_X86_INSTRUCTION_VPCMPISTRM, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_63[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_63[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_ARPL, 0, ee_prv_x86_process_operands_modrm_rm16_r16 },
     { EE_PRV_X86_SUPPMOD_64, 0, EE_X86_INSTRUCTION_MOVSXD, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPACKSSWB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F3A_NVVVV.hdr, EE_X86_INSTRUCTION_VPCMPISTRI, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_64[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_64[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPCMPGTB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_65[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_65[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPCMPGTW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_66[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_66[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPCMPGTD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_67[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_67[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPACKUSWB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_68[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_68[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPUNPCKHBW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_69[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_69[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_IMUL, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPUNPCKHWD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_PUSH, 0, ee_prv_x86_process_operands_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPUNPCKHDQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_IMUL, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPACKSSDW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_INS, 0, ee_prv_x86_process_operands_m8AesAdiOediOrdi_dx },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPUNPCKLQDQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_INS, 0, ee_prv_x86_process_operands_m16x32AesAdiOediOrdi_dx },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPUNPCKHQDQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OUTS, 0, ee_prv_x86_process_operands_dx_m8AsiOesiOrsi },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F_W0xIG32_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVD, 0, ee_prv_x86_process_operands_modrm_xmm_rm32 },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F_W1_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVQ, 0, ee_prv_x86_process_operands_modrm_xmm_rm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_6F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OUTS, 0, ee_prv_x86_process_operands_dx_m16x32AsiOesiOrsi },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVDQA, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVDQU, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_70[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_70[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JO, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VPSHUFD, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F2_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VPSHUFLW, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VPSHUFHW, 0, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_71[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_71[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JNO, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSRLW, &EE_PRV_X86_OPRDCONS_MODRM_REG2R.hdr, ee_prv_x86_process_operands_modrm_xymmVVVV_xyrm128x256_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSRAW, &EE_PRV_X86_OPRDCONS_MODRM_REG4R.hdr, ee_prv_x86_process_operands_modrm_xymmVVVV_xyrm128x256_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSLLW, &EE_PRV_X86_OPRDCONS_MODRM_REG6R.hdr, ee_prv_x86_process_operands_modrm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_72[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_72[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JB, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSRLD, &EE_PRV_X86_OPRDCONS_MODRM_REG2R.hdr, ee_prv_x86_process_operands_modrm_xymmVVVV_xyrm128x256_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSRAD, &EE_PRV_X86_OPRDCONS_MODRM_REG4R.hdr, ee_prv_x86_process_operands_modrm_xymmVVVV_xyrm128x256_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSLLD, &EE_PRV_X86_OPRDCONS_MODRM_REG6R.hdr, ee_prv_x86_process_operands_modrm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_73[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_73[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JAE, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSRLQ, &EE_PRV_X86_OPRDCONS_MODRM_REG2R.hdr, ee_prv_x86_process_operands_modrm_xymmVVVV_xyrm128x256_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSRLDQ, &EE_PRV_X86_OPRDCONS_MODRM_REG3R.hdr, ee_prv_x86_process_operands_modrm_xymmVVVV_xyrm128x256_imm8 },
@@ -2251,71 +2253,71 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_73[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSLLDQ, &EE_PRV_X86_OPRDCONS_MODRM_REG7R.hdr, ee_prv_x86_process_operands_modrm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_74[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_74[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JE, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPCMPEQB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_75[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_75[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JNE, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPCMPEQW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_76[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_76[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JBE, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPCMPEQD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_77[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_77[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JA, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VZEROUPPER },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_256_NP_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VZEROALL }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_78[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_78[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JS, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VPBROADCASTB, 0, ee_prv_x86_process_operands_modrm_xymm_xrm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_79[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_79[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JNS, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0_NVVVV.hdr, EE_X86_INSTRUCTION_VPBROADCASTW, 0, ee_prv_x86_process_operands_modrm_xymm_xrm16 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JP, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JNP, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JL, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VHADDPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F2_0F.hdr, EE_X86_INSTRUCTION_VHADDPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JGE, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VHSUBPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F2_0F.hdr, EE_X86_INSTRUCTION_VHSUBPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JLE, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F_W0xIG32_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVD, 0, ee_prv_x86_process_operands_modrm_rm32_xmm },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F_W1_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVQ, 0, ee_prv_x86_process_operands_modrm_rm64_xmm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_F3_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVQ, 0, ee_prv_x86_process_operands_modrm_xmm_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_7F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JG, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BRANCH_HINT | EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVDQA, 0, ee_prv_x86_process_operands_modrm_xyrm128x256_xymm },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVDQU, 0, ee_prv_x86_process_operands_modrm_xyrm128x256_xymm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_80[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_80[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADD, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm8_imm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OR, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm8_imm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADC, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm8_imm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
@@ -2326,7 +2328,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_80[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMP, &EE_PRV_X86_OPRDCONS_MODRM_REG7.hdr, ee_prv_x86_process_operands_modrm_rm8_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_81[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_81[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADD, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm16x32, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OR, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm16x32, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADC, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm16x32, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
@@ -2337,7 +2339,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_81[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMP, &EE_PRV_X86_OPRDCONS_MODRM_REG7.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm16x32 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_83[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_83[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADD, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OR, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ADC, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
@@ -2348,39 +2350,39 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_83[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMP, &EE_PRV_X86_OPRDCONS_MODRM_REG7.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_84[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_84[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_TEST, 0, ee_prv_x86_process_operands_modrm_rm8_r8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_85[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_85[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_TEST, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_86[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_86[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XCHG, 0, ee_prv_x86_process_operands_modrm_r8_rm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WIWO_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_87[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_87[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XCHG, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WIWO_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_88[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_88[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_modrm_rm8_r8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_WIWO_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_89[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_89[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_WIWO_LOCK }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8A[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_modrm_r8_rm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_modrm_r16x32x64_rm16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_r16x32x64m16_sreg },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_r16x32x64m16_sreg },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_r16x32x64m16_sreg },
@@ -2391,11 +2393,11 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VPMASKMOVQ, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LEA, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r16x32x64_m }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_sreg_rm16x64 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_sreg_rm16x64 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_sreg_rm16x64 },
@@ -2406,11 +2408,11 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VPMASKMOVQ, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xyrm128x256_xymmVVVV_xymm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_8F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_POP, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm16x32M32x64M64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_90[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_90[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_NF3_REX_B0.grp_cons.hdr, EE_X86_INSTRUCTION_NOP },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_F3.hdr, EE_X86_INSTRUCTION_PAUSE },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_GRP_NF3_REX_B1.grp_cons.hdr, EE_X86_INSTRUCTION_XCHG, 0, ee_prv_x86_process_operands_plusr_axOeaxOrax_r16x32x64 },
@@ -2418,45 +2420,45 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_90[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VPGATHERDQ, 0, ee_prv_x86_process_operands_modrm_xymm_m64vm32x_xymmVVVV }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_91[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_91[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XCHG, 0, ee_prv_x86_process_operands_plusr_axOeaxOrax_r16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VPGATHERQD, 0, ee_prv_x86_process_operands_modrm_xmm_m32vm64xy_xmmVVVV },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VPGATHERQQ, 0, ee_prv_x86_process_operands_modrm_xymm_m64vm64xy_xymmVVVV }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_92[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_92[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XCHG, 0, ee_prv_x86_process_operands_plusr_axOeaxOrax_r16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VGATHERDPS, 0, ee_prv_x86_process_operands_modrm_xymm_m32vm32xy_xymmVVVV },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VGATHERDPD, 0, ee_prv_x86_process_operands_modrm_xymm_m64vm32x_xymmVVVV }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_93[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_93[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XCHG, 0, ee_prv_x86_process_operands_plusr_axOeaxOrax_r16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VGATHERQPS, 0, ee_prv_x86_process_operands_modrm_xmm_m32vm64xy_xmmVVVV },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VGATHERQPD, 0, ee_prv_x86_process_operands_modrm_xymm_m64vm64xy_xymmVVVV }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_94[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_94[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XCHG, 0, ee_prv_x86_process_operands_plusr_axOeaxOrax_r16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_95[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_95[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XCHG, 0, ee_prv_x86_process_operands_plusr_axOeaxOrax_r16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_96[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_96[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XCHG, 0, ee_prv_x86_process_operands_plusr_axOeaxOrax_r16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMADDSUB132PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMADDSUB132PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_97[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_97[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XCHG, 0, ee_prv_x86_process_operands_plusr_axOeaxOrax_r16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMSUBADD132PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMSUBADD132PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_98[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_98[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_CBW },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_CWDE },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_CDQE },
@@ -2464,7 +2466,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_98[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMADD132PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_99[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_99[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_CWD },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_CDQ },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_CQO },
@@ -2472,19 +2474,19 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_99[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMADD132SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9A[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9A[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_CALL, 0, ee_prv_x86_process_operands_farptr16A16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMSUB132PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMSUB132PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9B[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9B[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_WAIT },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMSUB132SS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMSUB132SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9C[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_PUSHF },
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_PUSHFD },
     { EE_PRV_X86_SUPPMOD_64, 0, EE_X86_INSTRUCTION_PUSHFQ },
@@ -2492,7 +2494,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9C[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMADD132PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9D[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_POPF },
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_POPFD },
     { EE_PRV_X86_SUPPMOD_64, 0, EE_X86_INSTRUCTION_POPFQ },
@@ -2500,91 +2502,91 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9D[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMADD132SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9E[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9E[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SAHF },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFNMSUB132PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMSUB132PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9F[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_9F[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LAHF },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFNMSUB132SS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMSUB132SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_al_moffs8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_axOeaxOraxPREF_moffs16x32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A2[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_moffs8_al }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A3[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A3[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_moffs16x32x64_axOeaxOraxPREF }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A4[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A4[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOVS, 0, ee_prv_x86_process_operands_m8AesAdiOediOrdi_m8AsiOesiOrsi }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A5[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOVS, 0, ee_prv_x86_process_operands_m16x32x64AesAdiOediOrdi_m16x32x64AsiOesiOrsi }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMPS, 0, ee_prv_x86_process_operands_m8AsiOesiOrsi_m8AesAdiOediOrdi },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMADDSUB213PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMADDSUB213PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A7[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMPS, 0, ee_prv_x86_process_operands_m16x32x64AsiOesiOrsi_m16x32x64AesAdiOediOrdi },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMSUBADD213PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMSUBADD213PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_TEST, 0, ee_prv_x86_process_operands_al_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMADD213PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMADD213PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_A9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_TEST, 0, ee_prv_x86_process_operands_axOeaxOraxPREF_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMADD213SS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMADD213SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_STOS, 0, ee_prv_x86_process_operands_m8AesAdiOediOrdi_al },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMSUB213PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMSUB213PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_STOS, 0, ee_prv_x86_process_operands_m16x32x64AesAdiOediOrdi_axOeaxOrax },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMSUB213SS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMSUB213SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LODS, 0, ee_prv_x86_process_operands_al_m8AsiOesiOrsi },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFNMADD213PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMADD213PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AD[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LODS, 0, ee_prv_x86_process_operands_axOeaxOrax_m16x32x64AsiOesiOrsi },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFNMADD213SS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMADD213SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SCAS, 0, ee_prv_x86_process_operands_al_m8AesAdiOediOrdi },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_NP_0F.hdr, EE_X86_INSTRUCTION_VLDMXCSR, &EE_PRV_X86_OPRDCONS_MODRM_REG2M.hdr, ee_prv_x86_process_operands_modrm_m32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_NP_0F.hdr, EE_X86_INSTRUCTION_VSTMXCSR, &EE_PRV_X86_OPRDCONS_MODRM_REG3M.hdr, ee_prv_x86_process_operands_modrm_m32 },
@@ -2592,77 +2594,77 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMSUB213PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_AF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SCAS, 0, ee_prv_x86_process_operands_axOeaxOrax_m16x32x64AesAdiOediOrdi },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFNMSUB213SS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMSUB213SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_B0tB5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_B0tB5[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_plusr_r8_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_B6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_B6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_plusr_r8_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMADDSUB231PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMADDSUB231PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_B7[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_B7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_plusr_r8_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMSUBADD231PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMSUBADD231PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_B8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_B8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_plusr_r16x32x64_imm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMADD231PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMADD231PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_B9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_B9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_plusr_r16x32x64_imm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMADD231SS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMADD231SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_plusr_r16x32x64_imm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMSUB231PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMSUB231PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_plusr_r16x32x64_imm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFMSUB231SS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFMSUB231SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_plusr_r16x32x64_imm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFNMADD231PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMADD231PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BD[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_plusr_r16x32x64_imm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFNMADD231SS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMADD231SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_plusr_r16x32x64_imm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFNMSUB231PS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMSUB231PD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_BF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, 0, ee_prv_x86_process_operands_plusr_r16x32x64_imm16x32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W0.hdr, EE_X86_INSTRUCTION_VFNMSUB231SS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F38_W1.hdr, EE_X86_INSTRUCTION_VFNMSUB231SD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROL, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm8_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROR, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm8_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RCL, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm8_imm8 },
@@ -2673,7 +2675,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SAR, &EE_PRV_X86_OPRDCONS_MODRM_REG7.hdr, ee_prv_x86_process_operands_modrm_rm8_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROL, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROR, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RCL, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8 },
@@ -2684,7 +2686,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_SAR, &EE_PRV_X86_OPRDCONS_MODRM_REG7.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C2[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RET, 0, ee_prv_x86_process_operands_imm16, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F2_0F.hdr, EE_X86_INSTRUCTION_VCMPSD, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm64_imm8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_PSEUDONYMIZATION },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F.hdr, EE_X86_INSTRUCTION_VCMPSS, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_xrm32_imm8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_PSEUDONYMIZATION },
@@ -2692,69 +2694,69 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VCMPPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_PSEUDONYMIZATION }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C3[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C3[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RET, 0, 0, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C4[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C4[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_LES, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r16x32_m32x48 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F_W0xIG64.hdr, EE_X86_INSTRUCTION_VPINSRW, 0, ee_prv_x86_process_operands_modrm_xmm_xmmVVVV_r32m16_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C5[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_LDS, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_r16x32_m32x48 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F_W0xIG64_NVVVV.hdr, EE_X86_INSTRUCTION_VPEXTRW, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32x64_xmm_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm8_imm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_WIWO_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XABORT, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_F8.hdr, ee_prv_x86_process_operands_modrm_fake_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_NP_0F.hdr, EE_X86_INSTRUCTION_VSHUFPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VSHUFPD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C7[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_MOV, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm16x32, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_WIWO_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XBEGIN, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_F8.hdr, ee_prv_x86_process_operands_modrm_fake_rel16x32 },
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ENTER, 0, ee_prv_x86_process_operands_imm16_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_C9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LEAVE }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_RETF, 0, ee_prv_x86_process_operands_imm16 },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_RETFQ, 0, ee_prv_x86_process_operands_imm16 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_RETF },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_RETFQ }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_INT3 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CD[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_INT, 0, ee_prv_x86_process_operands_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CE[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_INTO }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_CF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_66_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_IRET },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_GRP_N66_REX_W0.grp_cons.hdr, EE_X86_INSTRUCTION_IRETD },
     { EE_PRV_X86_SUPPMOD_64, &EE_PRV_X86_PREFCONS_REX_W1.grp_cons.hdr, EE_X86_INSTRUCTION_IRETQ }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROL, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm8_1 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROR, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm8_1 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RCL, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm8_1 },
@@ -2767,7 +2769,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F2_0F.hdr, EE_X86_INSTRUCTION_VADDSUBPS, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROL, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_1 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROR, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_1 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RCL, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_1 },
@@ -2779,7 +2781,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSRLW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D2[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROL, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm8_cl },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROR, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm8_cl },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RCL, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm8_cl },
@@ -2791,7 +2793,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSRLD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D3[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D3[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROL, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_cl },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_ROR, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_cl },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_RCL, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_cl },
@@ -2803,28 +2805,28 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D3[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSRLQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D4[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D4[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_AAM, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_0A.hdr },
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_AAM, 0, ee_prv_x86_process_operands_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPADDQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D5[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_AAD, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_0A.hdr },
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_AAD, 0, ee_prv_x86_process_operands_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPMULLW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVQ, 0, ee_prv_x86_process_operands_modrm_xrm64_xmm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D7[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_XLAT, 0, ee_prv_x86_process_operands_byte_ptr_bxOebxOrbx },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VPMOVMSKB, &EE_PRV_X86_OPRDCONS_MODRM_ANY_R.hdr, ee_prv_x86_process_operands_modrm_r32x64_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FADD, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FMUL, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FCOM, &EE_PRV_X86_OPRDCONS_MODRM_REG2M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
@@ -2844,7 +2846,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSUBUSB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FLD, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FST, &EE_PRV_X86_OPRDCONS_MODRM_REG2M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FSTP, &EE_PRV_X86_OPRDCONS_MODRM_REG3M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
@@ -2885,7 +2887,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_D9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSUBUSW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FIADD, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FIMUL, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FICOM, &EE_PRV_X86_OPRDCONS_MODRM_REG2M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
@@ -2902,7 +2904,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FUCOMPP, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_E9.hdr }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FILD, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FISTTP, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FIST, &EE_PRV_X86_OPRDCONS_MODRM_REG2M.hdr, ee_prv_x86_process_operands_modrm_rm32 },
@@ -2921,7 +2923,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FCOMI, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_F0tF7.hdr, ee_prv_x86_process_operands_plusi_st0_sti }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FADD, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_rm64 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FMUL, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_rm64 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FCOM, &EE_PRV_X86_OPRDCONS_MODRM_REG2M.hdr, ee_prv_x86_process_operands_modrm_rm64 },
@@ -2940,7 +2942,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FDIV, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_F8tFF.hdr, ee_prv_x86_process_operands_plusi_sti_st0 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DD[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FLD, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_rm64 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FISTTP, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_rm64 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FST, &EE_PRV_X86_OPRDCONS_MODRM_REG2M.hdr, ee_prv_x86_process_operands_modrm_rm64 },
@@ -2957,7 +2959,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FUCOMP, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_E8tEF.hdr, ee_prv_x86_process_operands_plusi_sti }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FIADD, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_rm16 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FIMUL, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_rm16 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FICOM, &EE_PRV_X86_OPRDCONS_MODRM_REG2M.hdr, ee_prv_x86_process_operands_modrm_rm16 },
@@ -2977,7 +2979,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FDIVP, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_F8tFF.hdr, ee_prv_x86_process_operands_plusi_sti_st0 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FILD, &EE_PRV_X86_OPRDCONS_MODRM_REG0M.hdr, ee_prv_x86_process_operands_modrm_rm16 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FISTTP, &EE_PRV_X86_OPRDCONS_MODRM_REG1M.hdr, ee_prv_x86_process_operands_modrm_rm16 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FIST, &EE_PRV_X86_OPRDCONS_MODRM_REG2M.hdr, ee_prv_x86_process_operands_modrm_rm16 },
@@ -2995,117 +2997,117 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_DF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_FCOMIP, &EE_PRV_X86_OPRDCONS_BYTE_RANGE_F0tF7.hdr, ee_prv_x86_process_operands_plusi_st0_sti }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LOOPNE, 0, ee_prv_x86_process_operands_rel8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPAVGB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LOOPE, 0, ee_prv_x86_process_operands_rel8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSRAW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E2[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_LOOP, 0, ee_prv_x86_process_operands_rel8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSRAD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E3[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E3[] = {
     { EE_PRV_X86_SUPPMOD_32, &EE_PRV_X86_PREFCONS_ASO_X86.hdr, EE_X86_INSTRUCTION_JCXZ, 0, ee_prv_x86_process_operands_rel8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_ASO_X86N_X64.hdr, EE_X86_INSTRUCTION_JECXZ, 0, ee_prv_x86_process_operands_rel8 },
     { EE_PRV_X86_SUPPMOD_64, 0, EE_X86_INSTRUCTION_JRCXZ, 0, ee_prv_x86_process_operands_rel8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPAVGW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E4[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E4[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_IN, 0, ee_prv_x86_process_operands_al_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPMULHUW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E5[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_IN, 0, ee_prv_x86_process_operands_axOeax_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPMULHW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OUT, 0, ee_prv_x86_process_operands_imm8_al },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTTPD2DQ, 0, ee_prv_x86_process_operands_modrm_xmm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F2_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTPD2DQ, 0, ee_prv_x86_process_operands_modrm_xmm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F3_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VCVTDQ2PD, 0, ee_prv_x86_process_operands_modrm_xymm_xrm64x128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E7[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OUT, 0, ee_prv_x86_process_operands_imm8_axOeax },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VMOVNTDQ, 0, ee_prv_x86_process_operands_modrm_xyrm128x256_xymm }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CALL, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSUBSB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_E9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JMP, 0, ee_prv_x86_process_operands_rel16x32X86rel32X64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSUBSW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_EA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_EA[] = {
     { EE_PRV_X86_SUPPMOD_32, 0, EE_X86_INSTRUCTION_JMP, 0, ee_prv_x86_process_operands_farptr16A16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPMINSW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_EB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_EB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_JMP, 0, ee_prv_x86_process_operands_rel8, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPOR, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_EC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_EC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_IN, 0, ee_prv_x86_process_operands_al_dx },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPADDSB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_ED[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_ED[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_IN, 0, ee_prv_x86_process_operands_axOeax_dx },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPADDSW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_EE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_EE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OUT, 0, ee_prv_x86_process_operands_dx_al },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPMAXSW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_EF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_EF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_OUT, 0, ee_prv_x86_process_operands_dx_axOeax },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPXOR, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F0[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F0[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_F2_0F_NVVVV.hdr, EE_X86_INSTRUCTION_VLDDQU, &EE_PRV_X86_OPRDCONS_MODRM_ANY_M.hdr, ee_prv_x86_process_operands_modrm_xymm_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_F2_0F3A_NVVVV.hdr, EE_X86_INSTRUCTION_RORX, 0, ee_prv_x86_process_operands_modrm_r32x64_rm32x64_imm8 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F1[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F1[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSLLW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xrm128 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F2[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F2[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSLLD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_NP_0F38.hdr, EE_X86_INSTRUCTION_ANDN, 0, ee_prv_x86_process_operands_modrm_r32x64_r32x64VVVV_rm32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F3[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F3[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSLLQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xrm128 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_NP_0F38.hdr, EE_X86_INSTRUCTION_BLSR, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_r32x64VVVV_rm32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_NP_0F38.hdr, EE_X86_INSTRUCTION_BLSMSK, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_r32x64VVVV_rm32x64 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_NP_0F38.hdr, EE_X86_INSTRUCTION_BLSI, &EE_PRV_X86_OPRDCONS_MODRM_REG3.hdr, ee_prv_x86_process_operands_modrm_r32x64VVVV_rm32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F4[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F4[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_HLT },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPMULUDQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F5[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F5[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CMC },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPMADDWD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_NP_0F38.hdr, EE_X86_INSTRUCTION_BZHI, 0, ee_prv_x86_process_operands_modrm_r32x64_rm32x64_r32x64VVVV },
@@ -3113,7 +3115,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F5[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_F3_0F38.hdr, EE_X86_INSTRUCTION_PEXT, 0, ee_prv_x86_process_operands_modrm_r32x64_r32x64VVVV_rm32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F6[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_TEST, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm8_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_TEST, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm8_imm8 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_NOT, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
@@ -3126,7 +3128,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F6[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_F2_0F38.hdr, EE_X86_INSTRUCTION_MULX, 0, ee_prv_x86_process_operands_modrm_r32x64_r32x64VVVV_rm32x64 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F7[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_TEST, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_TEST, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64_imm16x32 },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_NOT, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
@@ -3142,43 +3144,43 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F7[] = {
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_128_F3_0F38.hdr, EE_X86_INSTRUCTION_SARX, 0, ee_prv_x86_process_operands_modrm_r32x64_rm32x64_r32x64VVVV }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F8[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F8[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CLC },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSUBB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F9[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_F9[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_STC },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSUBW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FA[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FA[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CLI },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSUBD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FB[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FB[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_STI },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPSUBQ, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FC[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FC[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CLD },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPADDB, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FD[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FD[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_STD },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPADDW, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FE[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FE[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_INC, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_DEC, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm8, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, &EE_PRV_X86_PREFCONS_VEX_66_0F.hdr, EE_X86_INSTRUCTION_VPADDD, 0, ee_prv_x86_process_operands_modrm_xymm_xymmVVVV_xyrm128x256 }
 };
 
-const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FF[] = {
+static const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FF[] = {
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_INC, &EE_PRV_X86_OPRDCONS_MODRM_REG0.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_DEC, &EE_PRV_X86_OPRDCONS_MODRM_REG1.hdr, ee_prv_x86_process_operands_modrm_rm16x32x64, EE_PRV_X86_OPCIDF_XACQUIRE_XRELEASE_ENABLED_WI_LOCK },
     { EE_PRV_X86_SUPPMOD_32_64, 0, EE_X86_INSTRUCTION_CALL, &EE_PRV_X86_OPRDCONS_MODRM_REG2.hdr, ee_prv_x86_process_operands_modrm_rm16x32M32x64M64, EE_PRV_X86_OPCIDF_ELIGIBLE_FOR_BND_PREFIX },
@@ -3193,7 +3195,7 @@ const ee_prv_x86_opcode_identity_t EE_PRV_X86_OPCODE_IDENTITIES_FF[] = {
 
 #define EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(list) { list, EE_GET_ARRAY_LEN(list) }
 
-const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_OPCODE_IDENTITY_LISTS[] = {
+static const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_OPCODE_IDENTITY_LISTS[] = {
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_00),
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_01),
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_02),
@@ -3452,12 +3454,10 @@ const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_OPCODE_IDENTITY_LISTS[] = {
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_FF)
 };
 
-const ee_size_t EE_PRV_X86_OPCODE_IDENTITY_LISTS_COUNT = EE_GET_ARRAY_LEN(EE_PRV_X86_OPCODE_IDENTITY_LISTS);
-
 /* Escaped opcode identity lists
 */
 
-const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0Fd_OPCODE_IDENTITY_LISTS[] = {
+static const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0Fd_OPCODE_IDENTITY_LISTS[] = {
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_0F_00),
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_0F_01),
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_0F_02),
@@ -3715,9 +3715,7 @@ const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0Fd_OPCODE_IDENTITY_LISTS[] =
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_0F_FE)
 };
 
-const ee_size_t EE_PRV_X86_0Fd_OPCODE_IDENTITY_LISTS_COUNT = EE_GET_ARRAY_LEN(EE_PRV_X86_0Fd_OPCODE_IDENTITY_LISTS);
-
-const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0F38d_OPCODE_IDENTITY_LISTS[] = {
+static const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0F38d_OPCODE_IDENTITY_LISTS[] = {
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_0F_38_00),
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_0F_38_01),
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_0F_38_02),
@@ -3970,9 +3968,7 @@ const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0F38d_OPCODE_IDENTITY_LISTS[]
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_0F_38_F9)
 };
 
-const ee_size_t EE_PRV_X86_0F38d_OPCODE_IDENTITY_LISTS_COUNT = EE_GET_ARRAY_LEN(EE_PRV_X86_0F38d_OPCODE_IDENTITY_LISTS);
-
-const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0F3Ad_OPCODE_IDENTITY_LISTS[] = {
+static const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0F3Ad_OPCODE_IDENTITY_LISTS[] = {
     { 0, 0 }, /* 0F 3A 00 */
     { 0, 0 }, /* 0F 3A 01 */
     { 0, 0 }, /* 0F 3A 02 */
@@ -4198,7 +4194,5 @@ const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0F3Ad_OPCODE_IDENTITY_LISTS[]
     { 0, 0 }, /* 0F 3A DE */
     EE_PRV_X86_INIT_OPCODE_IDENTITY_LISTS_ENTRY(EE_PRV_X86_OPCODE_IDENTITIES_0F_3A_DF)
 };
-
-const ee_size_t EE_PRV_X86_0F3Ad_OPCODE_IDENTITY_LISTS_COUNT = EE_GET_ARRAY_LEN(EE_PRV_X86_0F3Ad_OPCODE_IDENTITY_LISTS);
 
 #endif

@@ -15,7 +15,6 @@ ee_bool_t ee_x86_format(ee_x86_mode_t mode, ee_uint64_t instruction_address, con
 #ifdef EE_X86_FORMAT_IMPL
     #define EE_PRV_UNLOCK_DETAIL
     #include "ee/detail/x86f/format_impl.h"
-    #include "ee/detail/x86f/lookup_impl.h"
     #undef EE_PRV_UNLOCK_DETAIL
 #endif
 

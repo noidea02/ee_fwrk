@@ -5,9 +5,9 @@
 #error "Direct inclusion of detail headers is forbidden."
 #endif
 
-#include "ee/detail/x86f/lookup.h"
+#include "ee/ee_x86.h"
 
-const ee_ascii_char_t* ee_prv_x86f_lookup_prefix_str(ee_x86_prefix_type_t pref, ee_ascii_char_t* out, ee_size_t out_size) {
+static const ee_ascii_char_t* ee_prv_x86f_lookup_prefix_str(ee_x86_prefix_type_t pref, ee_ascii_char_t* out, ee_size_t out_size) {
 
     switch (pref) {
     case EE_X86_PREFIX_LOCK:     return EE_OBFUSCATED_SL("\xA0\xA3\x36\x3F", out, out_size); /* lock */
@@ -24,7 +24,7 @@ const ee_ascii_char_t* ee_prv_x86f_lookup_prefix_str(ee_x86_prefix_type_t pref, 
     return 0;
 }
 
-const ee_ascii_char_t* ee_prv_x86f_lookup_instruction_str(ee_x86_instruction_type_t inst, ee_ascii_char_t* out, ee_size_t out_size) {
+static const ee_ascii_char_t* ee_prv_x86f_lookup_instruction_str(ee_x86_instruction_type_t inst, ee_ascii_char_t* out, ee_size_t out_size) {
 
     switch (inst) {
     case EE_X86_INSTRUCTION_AAA:              return EE_OBFUSCATED_SL("\xAD\xAD\x34", out, out_size); /* aaa */
@@ -1221,7 +1221,7 @@ const ee_ascii_char_t* ee_prv_x86f_lookup_instruction_str(ee_x86_instruction_typ
     return 0;
 }
 
-const ee_ascii_char_t* ee_prv_x86f_lookup_gpp_register_str(ee_x86_gpp_register_type_t gpp_reg, ee_ascii_char_t* out, ee_size_t out_size) {
+static const ee_ascii_char_t* ee_prv_x86f_lookup_gpp_register_str(ee_x86_gpp_register_type_t gpp_reg, ee_ascii_char_t* out, ee_size_t out_size) {
 
     switch (gpp_reg) {
     case EE_X86_GPP_REGISTER_RAX: return EE_OBFUSCATED_SL("\xBE\xAD\x2D", out, out_size); /* rax */
@@ -1266,7 +1266,7 @@ const ee_ascii_char_t* ee_prv_x86f_lookup_gpp_register_str(ee_x86_gpp_register_t
     return 0;
 }
 
-const ee_ascii_char_t* ee_prv_x86f_lookup_segment_register_str(ee_x86_segment_register_type_t seg_reg, ee_ascii_char_t* out, ee_size_t out_size) {
+static const ee_ascii_char_t* ee_prv_x86f_lookup_segment_register_str(ee_x86_segment_register_type_t seg_reg, ee_ascii_char_t* out, ee_size_t out_size) {
 
     switch (seg_reg) {
     case EE_X86_SEGMENT_REGISTER_CS: return EE_OBFUSCATED_SL("\xAF\xBF", out, out_size); /* cs */
@@ -1281,7 +1281,7 @@ const ee_ascii_char_t* ee_prv_x86f_lookup_segment_register_str(ee_x86_segment_re
     return 0;
 }
 
-const ee_ascii_char_t* ee_prv_x86f_lookup_pointer_type_str(ee_x86_pointer_type_t ptr_type, ee_ascii_char_t* out, ee_size_t out_size) {
+static const ee_ascii_char_t* ee_prv_x86f_lookup_pointer_type_str(ee_x86_pointer_type_t ptr_type, ee_ascii_char_t* out, ee_size_t out_size) {
 
     switch (ptr_type) {
     case EE_X86_POINTER_NOT_EXISTING: return "";

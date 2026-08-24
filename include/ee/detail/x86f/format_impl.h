@@ -5,9 +5,7 @@
 #error "Direct inclusion of detail headers is forbidden."
 #endif
 
-#include "ee/detail/x86f/lookup.h"
-
-#define EE_PRV_X86F_LONGEST_INSTRUCTION_STR "\xBE\xA9\x25\x3A\x8D\x24\x5C\x20\x65\xF8\x6B\x39\x24\xA4\xA9\xA2\xAD\xBF\x26\x3D\x9B\x70" /* repne vaeskeygenassist */
+#include "ee/detail/x86f/lookup_impl.h"
 
 typedef struct {
 
@@ -20,7 +18,7 @@ typedef struct {
 
 } ee_prv_x86f_base_params_t;
 
-ee_bool_t ee_prv_x86f_format_printable_prefixes(const ee_x86_prefix_type_t* printable_prefixes, ee_size_t num_printable_prefixes, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_printable_prefixes(const ee_x86_prefix_type_t* printable_prefixes, ee_size_t num_printable_prefixes, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_size_t index = 0;
 
@@ -45,7 +43,7 @@ ee_bool_t ee_prv_x86f_format_printable_prefixes(const ee_x86_prefix_type_t* prin
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86f_write_register_string(const ee_ascii_char_t* reg_prefix, ee_bool_t enclose_reg_index, ee_int32_t reg_index, const ee_ascii_char_t* reg_suffix, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_write_register_string(const ee_ascii_char_t* reg_prefix, ee_bool_t enclose_reg_index, ee_int32_t reg_index, const ee_ascii_char_t* reg_suffix, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     if (!ee_strapp(output, output_buf_size, reg_prefix))
         return EE_FALSE;
@@ -72,7 +70,7 @@ ee_bool_t ee_prv_x86f_write_register_string(const ee_ascii_char_t* reg_prefix, e
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86f_format_gpp_register(ee_x86_gpp_register_type_t gpp_reg, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_gpp_register(ee_x86_gpp_register_type_t gpp_reg, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_ascii_char_t reg_str_buf[64] = { 0 };
     const ee_ascii_char_t* const reg_str = ee_prv_x86f_lookup_gpp_register_str(gpp_reg, reg_str_buf, sizeof(reg_str_buf));
@@ -83,7 +81,7 @@ ee_bool_t ee_prv_x86f_format_gpp_register(ee_x86_gpp_register_type_t gpp_reg, ee
     return ee_prv_x86f_write_register_string(reg_str, EE_FALSE, -1, EE_SL(""), output, output_buf_size);
 }
 
-ee_bool_t ee_prv_x86f_format_gpp_ex_register(const ee_x86_numbered_register_t* gpp_ex_reg, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_gpp_ex_register(const ee_x86_numbered_register_t* gpp_ex_reg, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     const ee_ascii_char_t* width_indicator_str = EE_SL("");
     switch (gpp_ex_reg->size_bits) {
@@ -106,7 +104,7 @@ ee_bool_t ee_prv_x86f_format_gpp_ex_register(const ee_x86_numbered_register_t* g
     return ee_prv_x86f_write_register_string(EE_SL("r"), EE_FALSE, gpp_ex_reg->index, width_indicator_str, output, output_buf_size);
 }
 
-ee_bool_t ee_prv_x86f_format_vector_register(const ee_x86_numbered_register_t* vector_reg, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_vector_register(const ee_x86_numbered_register_t* vector_reg, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_ascii_char_t deob_buf[64] = { 0 };
     const ee_size_t deob_buf_size = sizeof(deob_buf);
@@ -125,7 +123,7 @@ ee_bool_t ee_prv_x86f_format_vector_register(const ee_x86_numbered_register_t* v
     return EE_FALSE;
 }
 
-ee_bool_t ee_prv_x86f_format_segment_register(ee_x86_segment_register_type_t seg_reg, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_segment_register(ee_x86_segment_register_type_t seg_reg, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_ascii_char_t reg_str_buf[64] = { 0 };
     const ee_ascii_char_t* const reg_str = ee_prv_x86f_lookup_segment_register_str(seg_reg, reg_str_buf, sizeof(reg_str_buf));
@@ -136,7 +134,7 @@ ee_bool_t ee_prv_x86f_format_segment_register(ee_x86_segment_register_type_t seg
     return ee_prv_x86f_write_register_string(reg_str, EE_FALSE, -1, EE_SL(""), output, output_buf_size);
 }
 
-ee_bool_t ee_prv_x86f_format_relative_address_operand(const ee_prv_x86f_base_params_t* base_params, const ee_x86_relative_address_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_relative_address_operand(const ee_prv_x86f_base_params_t* base_params, const ee_x86_relative_address_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_ascii_char_t addr_str[18] = { 0 };
     ee_ascii_char_t padded_addr_str[18] = { 0 };
@@ -174,7 +172,7 @@ ee_bool_t ee_prv_x86f_format_relative_address_operand(const ee_prv_x86f_base_par
     return ee_strapp(output, output_buf_size, padded_addr_str) && ee_strapp(output, output_buf_size, EE_SL("h"));
 }
 
-ee_bool_t ee_prv_x86f_format_far_pointer_operand(const ee_x86_far_pointer_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_far_pointer_operand(const ee_x86_far_pointer_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_ascii_char_t raw_selector_str[16] = { 0 };
     ee_ascii_char_t raw_offset_str[16] = { 0 };
@@ -200,7 +198,7 @@ ee_bool_t ee_prv_x86f_format_far_pointer_operand(const ee_x86_far_pointer_operan
         && ee_strapp(output, output_buf_size, EE_SL("h"));
 }
 
-ee_bool_t ee_prv_x86f_format_register_operand(const ee_x86_register_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_register_operand(const ee_x86_register_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_ascii_char_t deob_buf[64] = { 0 };
     const ee_size_t deob_buf_size = sizeof(deob_buf);
@@ -255,7 +253,7 @@ ee_bool_t ee_prv_x86f_format_register_operand(const ee_x86_register_operand_t* o
     return EE_FALSE;
 }
 
-ee_bool_t ee_prv_x86f_format_pointer_operand_base(const ee_x86_pointer_operand_base_register_t* base, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_pointer_operand_base(const ee_x86_pointer_operand_base_register_t* base, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     if (!base->is_set)
         return EE_FALSE;
@@ -274,7 +272,7 @@ ee_bool_t ee_prv_x86f_format_pointer_operand_base(const ee_x86_pointer_operand_b
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86f_format_pointer_operand_index(const ee_x86_pointer_operand_index_register_t* index, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_pointer_operand_index(const ee_x86_pointer_operand_index_register_t* index, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     if (!index->is_set)
         return EE_FALSE;
@@ -298,7 +296,7 @@ ee_bool_t ee_prv_x86f_format_pointer_operand_index(const ee_x86_pointer_operand_
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_static_address, ee_size_t disp_num_bits, ee_int64_t disp, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_static_address, ee_size_t disp_num_bits, ee_int64_t disp, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_int64_t actual_disp = 0;
     ee_size_t desired_disp_str_len = 0;
@@ -367,7 +365,7 @@ ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_static_ad
     return ee_strapp(output, output_buf_size, resized_disp_str) && ee_strapp(output, output_buf_size, EE_SL("h"));
 }
 
-ee_bool_t ee_prv_x86f_format_pointer_operand(const ee_prv_x86f_base_params_t* base_params, const ee_x86_pointer_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_pointer_operand(const ee_prv_x86f_base_params_t* base_params, const ee_x86_pointer_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_ascii_char_t ptr_type_str_buf[64] = { 0 };
     const ee_ascii_char_t* const ptr_type_str = ee_prv_x86f_lookup_pointer_type_str(operand->type, ptr_type_str_buf, sizeof(ptr_type_str_buf));
@@ -455,7 +453,7 @@ ee_bool_t ee_prv_x86f_format_pointer_operand(const ee_prv_x86f_base_params_t* ba
     return EE_TRUE;
 }
 
-ee_bool_t ee_prv_x86f_format_immediate_value_operand(const ee_x86_immediate_value_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_immediate_value_operand(const ee_x86_immediate_value_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_ascii_char_t imm_val_str[17] = { 0 };
     ee_ascii_char_t padded_imm_val_str[17] = { 0 };

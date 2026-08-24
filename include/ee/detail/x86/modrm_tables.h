@@ -7,9 +7,6 @@
 
 #include "ee/ee_x86.h"
 
-/* Types
-*/
-
 typedef enum {
 
     EE_PRV_X86_EFFADDR_NONE,
@@ -92,32 +89,5 @@ typedef struct {
     ee_int64_t disp;
 
 } ee_prv_x86_modrm_resolved_effective_address_t;
-
-/* Fields
-*/
-
-extern const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EAX;
-extern const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_ECX;
-extern const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EDX;
-extern const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EBX;
-extern const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_ESP;
-extern const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EBP;
-extern const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_ESI;
-extern const ee_prv_x86_modrm_reg_pack_t EE_PRV_X86_MODRM_REG_PACK_EDI;
-
-extern const ee_prv_x86_modrm_reg_pack_t* EE_PRV_X86_MODRM_REG_PACKS[];
-extern const ee_size_t EE_PRV_X86_MODRM_REG_PACKS_COUNT;
-
-extern const ee_prv_x86_modrm_mapping_t EE_PRV_X86_MODRM16_TABLE[];
-extern const ee_size_t EE_PRV_X86_MODRM16_TABLE_COUNT;
-
-extern const ee_prv_x86_modrm_mapping_t EE_PRV_X86_MODRM32_TABLE[];
-extern const ee_size_t EE_PRV_X86_MODRM32_TABLE_COUNT;
-
-extern const ee_prv_x86_modrm32_sib_mapping_t EE_PRV_X86_MODRM32_SIB_TABLE[];
-extern const ee_size_t EE_PRV_X86_MODRM32_SIB_TABLE_COUNT;
-
-extern const ee_prv_x86_modrm32_sib_mapping_t EE_PRV_X86_MODRM32_VSIB_TABLE[];
-extern const ee_size_t EE_PRV_X86_MODRM32_VSIB_TABLE_COUNT;
 
 #endif

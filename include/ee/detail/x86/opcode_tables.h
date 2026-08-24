@@ -5,14 +5,9 @@
 #error "Direct inclusion of detail headers is forbidden."
 #endif
 
-#include "ee/ee_x86.h"
-
 #include "ee/detail/x86/operand_constraints.h"
 #include "ee/detail/x86/prefix_constraints.h"
 #include "ee/detail/x86/state_machine.h"
-
-/* Types
-*/
 
 typedef enum {
 
@@ -40,20 +35,5 @@ typedef struct {
     ee_size_t num_elements;
 
 } ee_prv_x86_opcode_identity_list_t;
-
-/* Fields
-*/
-
-extern const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_OPCODE_IDENTITY_LISTS[];
-extern const ee_size_t EE_PRV_X86_OPCODE_IDENTITY_LISTS_COUNT;
-
-extern const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0Fd_OPCODE_IDENTITY_LISTS[];
-extern const ee_size_t EE_PRV_X86_0Fd_OPCODE_IDENTITY_LISTS_COUNT;
-
-extern const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0F38d_OPCODE_IDENTITY_LISTS[];
-extern const ee_size_t EE_PRV_X86_0F38d_OPCODE_IDENTITY_LISTS_COUNT;
-
-extern const ee_prv_x86_opcode_identity_list_t EE_PRV_X86_0F3Ad_OPCODE_IDENTITY_LISTS[];
-extern const ee_size_t EE_PRV_X86_0F3Ad_OPCODE_IDENTITY_LISTS_COUNT;
 
 #endif

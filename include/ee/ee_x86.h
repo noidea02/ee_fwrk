@@ -1469,12 +1469,6 @@ struct ee_x86_disasm_output {
 
 #ifdef EE_X86_IMPL
     #define EE_PRV_UNLOCK_DETAIL
-    #include "ee/detail/x86/instruction_pseudonyms_impl.h"
-    #include "ee/detail/x86/modrm_tables_impl.h"
-    #include "ee/detail/x86/opcode_tables_impl.h"
-    #include "ee/detail/x86/operand_constraints_impl.h"
-    #include "ee/detail/x86/operand_processors_impl.h"
-    #include "ee/detail/x86/prefix_constraints_impl.h"
     #include "ee/detail/x86/state_machine_impl.h"
     #undef EE_PRV_UNLOCK_DETAIL
 #endif
