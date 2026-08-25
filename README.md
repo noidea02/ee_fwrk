@@ -27,7 +27,7 @@ ee_x86 implements the x86 instruction decoder and formatter. As of today, the fo
 
 Other extensions such as AVX-512, AMX and APX are not supported (yet).
 
-ee_x86 is thread-safe by default and grows the binary size by roughly 275 kb (decoder: 190 kb). Verification is done by using a proprietary structure-aware differential fuzzer,
+ee_x86 is thread-safe by default and increases the binary size by roughly 275 kb (decoder: 190 kb). Verification is done by using a proprietary structure-aware differential fuzzer,
 which uses MSDis (Microsoft Disassembler) as reference. Since MSDis does not support 16-bit mode, only code paths related to 32 and 64-bit mode are subjected to fuzzing.
 
 ee_x86 and fuzzer performance (16 threads):
