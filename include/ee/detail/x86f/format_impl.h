@@ -141,9 +141,12 @@ static ee_bool_t ee_prv_x86f_format_relative_address_operand(const ee_prv_x86f_b
     ee_size_t desired_str_len = 0;
     ee_uint64_t final_addr = base_params->inst_addr + base_params->inst_size + (ee_uint64_t)((ee_int64_t)operand->offset);
 
-    /* Special case: For rel16 the final address must be truncated to 16 bits (outside long mode only). */
-    if (base_params->active_mode != EE_X86_MODE_64 && base_params->has_active_operand_size_override)
-        final_addr &= (ee_uint64_t)0xFFFF;
+    /* Truncate final address down to 16 bits if necessary. */
+    if ((base_params->active_mode == EE_X86_MODE_16 && !base_params->has_active_operand_size_override)
+        || (base_params->active_mode == EE_X86_MODE_32 && base_params->has_active_operand_size_override)) {
+        
+        final_addr &= (ee_uint64_t)0xffff;
+    }
 
     if (!ee_itoa64(final_addr, addr_str, sizeof(addr_str), EE_TRUE))
         return EE_FALSE;
@@ -152,7 +155,7 @@ static ee_bool_t ee_prv_x86f_format_relative_address_operand(const ee_prv_x86f_b
 
     case EE_X86_MODE_16:
 
-        desired_str_len = 4;
+        desired_str_len = (!base_params->has_active_operand_size_override ? 4 : 8);
         break;
 
     case EE_X86_MODE_64:
@@ -162,7 +165,7 @@ static ee_bool_t ee_prv_x86f_format_relative_address_operand(const ee_prv_x86f_b
 
     default:
 
-        desired_str_len = 8;
+        desired_str_len = (!base_params->has_active_operand_size_override ? 8 : 4);
     }
 
     /* Reminder: ee_strpad trims the string if it is longer than desired. */
@@ -396,7 +399,15 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand(const ee_prv_x86f_base_param
     if (operand->uses_rip_relative_addressing) {
 
         actual_disp = base_params->inst_addr + base_params->inst_size + (ee_uint64_t)operand->displacement;
-        actual_disp_num_bits = 64;
+        if (base_params->has_active_address_size_override) {
+
+            actual_disp &= (ee_uint64_t)0xffffffff;
+            actual_disp_num_bits = 32;
+        }
+        else {
+
+            actual_disp_num_bits = 64;
+        }
     }
     else {
 

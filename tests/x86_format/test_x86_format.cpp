@@ -17,16 +17,31 @@ namespace {
     constexpr auto REGULAR_INSTRUCTION{ make_array<ee_byte_t>(0x00, 0x00) };
     constexpr std::string_view REGULAR_INSTRUCTION_SV("add byte ptr[eax], al");
 
-    constexpr auto INSTRUCTION_WITH_REL32_OPD{ make_array<ee_byte_t>(0xe9, 0x05, 0x00, 0x00, 0x00) };
-    constexpr auto INSTRUCTION_WITH_OSO_INDUCED_REL16_OPD{ make_array<ee_byte_t>(0x66, 0xe9, 0x01, 0x00) };
-    constexpr std::string_view INSTRUCTION_AT_7FFF0000h_WITH_REL32_OPD_SV("jmp 7FFF000Ah");
-    constexpr std::string_view INSTRUCTION_AT_7FFF0000h_WITH_REL16_OPD_SV("jmp 00000005h");
-    constexpr std::string_view INSTRUCTION_IN_MODE16_AT_00h_WITH_REL32_OPD_SV("jmp 0008h");
-    constexpr std::string_view INSTRUCTION_IN_MODE32_AT_00h_WITH_REL32_OPD_SV("jmp 0000000Ah");
-    constexpr std::string_view INSTRUCTION_IN_MODE64_AT_00h_WITH_REL32_OPD_SV("jmp 000000000000000Ah");
+    constexpr auto INSTRUCTION_WITH_REL8_OPD{ make_array<ee_byte_t>(0xeb, 0x02) };
+    constexpr auto INSTRUCTION_WITH_66h_REL8_OPD{ make_array<ee_byte_t>(0x66, 0xeb, 0x02) };
+    constexpr auto INSTRUCTION_WITH_REL16_OPD{ make_array<ee_byte_t>(0xe9, 0x02, 0x00) };
+    constexpr auto INSTRUCTION_WITH_REL32_OPD{ make_array<ee_byte_t>(0xe9, 0x02, 0x00, 0x00, 0x00) };
+    constexpr auto INSTRUCTION_WITH_66h_REL32_OPD{ make_array<ee_byte_t>(0x66, 0xe9, 0x02, 0x00, 0x00, 0x00) };
+    constexpr std::string_view INSTRUCTION_16_AT_00h_WITH_REL32_OPD_SV("jmp 0005h");
+    constexpr std::string_view INSTRUCTION_32_AT_00h_WITH_REL32_OPD_SV("jmp 00000007h");
+    constexpr std::string_view INSTRUCTION_64_AT_00h_WITH_REL32_OPD_SV("jmp 0000000000000007h");
+    constexpr std::string_view INSTRUCTION_16_AT_7F00h_WITH_REL8_OPD_SV("jmp 7F04h");
+    constexpr std::string_view INSTRUCTION_16_AT_7FFF0000h_WITH_66h_REL8_OPD_SV("jmp 7FFF0005h");
+    constexpr std::string_view INSTRUCTION_32_AT_7FFF0000h_WITH_REL8_OPD_SV("jmp 7FFF0004h");
+    constexpr std::string_view INSTRUCTION_32_AT_7FFF0000h_WITH_66h_REL8_OPD_SV("jmp 0005h");
+    constexpr std::string_view INSTRUCTION_64_AT_7FFFFFFFFFFF0000h_WITH_REL8_OPD_SV("jmp 7FFFFFFFFFFF0004h");
+    constexpr std::string_view INSTRUCTION_64_AT_7FFFFFFFFFFF0000h_WITH_66h_REL8_OPD_SV("jmp 7FFFFFFFFFFF0005h");
+    constexpr std::string_view INSTRUCTION_16_AT_7F00h_WITH_REL16_OPD_SV("jmp 7F05h");
+    constexpr std::string_view INSTRUCTION_16_AT_7FFF0000h_WITH_66h_REL32_OPD_SV("jmp 7FFF0008h");
+    constexpr std::string_view INSTRUCTION_32_AT_7FFF0000h_WITH_REL32_OPD_SV("jmp 7FFF0007h");
+    constexpr std::string_view INSTRUCTION_32_AT_7FFF0000h_WITH_66h_REL16_OPD_SV("jmp 0006h");
+    constexpr std::string_view INSTRUCTION_64_AT_7FFFFFFFFFFF0000h_WITH_REL32_OPD_SV("jmp 7FFFFFFFFFFF0007h");
+    constexpr std::string_view INSTRUCTION_64_AT_7FFFFFFFFFFF0000h_WITH_66h_REL32_OPD_SV("jmp 7FFFFFFFFFFF0008h");
 
     constexpr auto INSTRUCTION_WITH_RIP_REL_ADDRESSING{ make_array<ee_byte_t>(0x8b, 0x05, 0x00, 0x00, 0x00, 0x00) };
+    constexpr auto INSTRUCTION_WITH_67h_RIP_REL_ADDRESSING{ make_array<ee_byte_t>(0x67, 0x8b, 0x05, 0x00, 0x00, 0x00, 0x00) };
     constexpr std::string_view INSTRUCTION_AT_7FFFFFFF00000000h_WITH_RIP_REL_ADDRESSING_SV("mov eax, dword ptr[7FFFFFFF00000006h]");
+    constexpr std::string_view INSTRUCTION_AT_7FFFFFFF00000000h_WITH_67h_RIP_REL_ADDRESSING_SV("mov eax, dword ptr[00000007h]");
 
     constexpr auto INSTRUCTION_WITH_IMM8_OPD{ make_array<ee_byte_t>(0xb0, 0x01) };
     constexpr auto INSTRUCTION_WITH_IMM16_OPD{ make_array<ee_byte_t>(0x66, 0xb8, 0x22, 0x01) };
@@ -137,28 +152,72 @@ TEST(ee_fwrk_x86_format, format_with_buf_size_correction) {
     EXPECT_STREQ(out.get(), std::string(REGULAR_INSTRUCTION_SV).c_str());
 }
 
-TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address) {
-    expect_format(EE_X86_MODE_32, INSTRUCTION_WITH_REL32_OPD, 0x7fff0000, INSTRUCTION_AT_7FFF0000h_WITH_REL32_OPD_SV);
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_rel8_16) {
+    expect_format(EE_X86_MODE_16, INSTRUCTION_WITH_REL8_OPD, 0x7f00, INSTRUCTION_16_AT_7F00h_WITH_REL8_OPD_SV);
 }
 
-TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_oso_32) {
-    expect_format(EE_X86_MODE_32, INSTRUCTION_WITH_OSO_INDUCED_REL16_OPD, 0x7fff0000, INSTRUCTION_AT_7FFF0000h_WITH_REL16_OPD_SV);
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_66h_rel8_16) {
+    expect_format(EE_X86_MODE_16, INSTRUCTION_WITH_66h_REL8_OPD, 0x7fff0000, INSTRUCTION_16_AT_7FFF0000h_WITH_66h_REL8_OPD_SV);
+}
+
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_rel8_32) {
+    expect_format(EE_X86_MODE_32, INSTRUCTION_WITH_REL8_OPD, 0x7fff0000, INSTRUCTION_32_AT_7FFF0000h_WITH_REL8_OPD_SV);
+}
+
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_66h_rel8_32) {
+    expect_format(EE_X86_MODE_32, INSTRUCTION_WITH_66h_REL8_OPD, 0x7fff0000, INSTRUCTION_32_AT_7FFF0000h_WITH_66h_REL8_OPD_SV);
+}
+
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_rel8_64) {
+    expect_format(EE_X86_MODE_64, INSTRUCTION_WITH_REL8_OPD, 0x7fffffffffff0000, INSTRUCTION_64_AT_7FFFFFFFFFFF0000h_WITH_REL8_OPD_SV);
+}
+
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_66h_rel8_64) {
+    expect_format(EE_X86_MODE_64, INSTRUCTION_WITH_66h_REL8_OPD, 0x7fffffffffff0000, INSTRUCTION_64_AT_7FFFFFFFFFFF0000h_WITH_66h_REL8_OPD_SV);
+}
+
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_rel16_16) {
+    expect_format(EE_X86_MODE_16, INSTRUCTION_WITH_REL16_OPD, 0x7f00, INSTRUCTION_16_AT_7F00h_WITH_REL16_OPD_SV);
+}
+
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_66h_rel32_16) {
+    expect_format(EE_X86_MODE_16, INSTRUCTION_WITH_66h_REL32_OPD, 0x7fff0000, INSTRUCTION_16_AT_7FFF0000h_WITH_66h_REL32_OPD_SV);
+}
+
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_rel32_32) {
+    expect_format(EE_X86_MODE_32, INSTRUCTION_WITH_REL32_OPD, 0x7fff0000, INSTRUCTION_32_AT_7FFF0000h_WITH_REL32_OPD_SV);
+}
+
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_66h_rel16_32) {
+    expect_format(EE_X86_MODE_32, INSTRUCTION_WITH_66h_REL32_OPD, 0x7fff0000, INSTRUCTION_32_AT_7FFF0000h_WITH_66h_REL16_OPD_SV);
+}
+
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_rel32_64) {
+    expect_format(EE_X86_MODE_64, INSTRUCTION_WITH_REL32_OPD, 0x7fffffffffff0000, INSTRUCTION_64_AT_7FFFFFFFFFFF0000h_WITH_REL32_OPD_SV);
+}
+
+TEST(ee_fwrk_x86_format, format_with_non_zero_inst_address_and_66h_rel32_64) {
+    expect_format(EE_X86_MODE_64, INSTRUCTION_WITH_66h_REL32_OPD, 0x7fffffffffff0000, INSTRUCTION_64_AT_7FFFFFFFFFFF0000h_WITH_66h_REL32_OPD_SV);
 }
 
 TEST(ee_fwrk_x86_format, format_with_rip_relative_addressing) {
     expect_format(EE_X86_MODE_64, INSTRUCTION_WITH_RIP_REL_ADDRESSING, 0x7fffffff00000000, INSTRUCTION_AT_7FFFFFFF00000000h_WITH_RIP_REL_ADDRESSING_SV);
 }
 
+TEST(ee_fwrk_x86_format, format_with_67h_rip_relative_addressing) {
+    expect_format(EE_X86_MODE_64, INSTRUCTION_WITH_67h_RIP_REL_ADDRESSING, 0x7fffffff00000000, INSTRUCTION_AT_7FFFFFFF00000000h_WITH_67h_RIP_REL_ADDRESSING_SV);
+}
+
 TEST(ee_fwrk_x86_format, format_with_address_padding_16) {
-    expect_format(EE_X86_MODE_16, INSTRUCTION_WITH_REL32_OPD, 0, INSTRUCTION_IN_MODE16_AT_00h_WITH_REL32_OPD_SV);
+    expect_format(EE_X86_MODE_16, INSTRUCTION_WITH_REL32_OPD, 0, INSTRUCTION_16_AT_00h_WITH_REL32_OPD_SV);
 }
 
 TEST(ee_fwrk_x86_format, format_with_address_padding_32) {
-    expect_format(EE_X86_MODE_32, INSTRUCTION_WITH_REL32_OPD, 0, INSTRUCTION_IN_MODE32_AT_00h_WITH_REL32_OPD_SV);
+    expect_format(EE_X86_MODE_32, INSTRUCTION_WITH_REL32_OPD, 0, INSTRUCTION_32_AT_00h_WITH_REL32_OPD_SV);
 }
 
 TEST(ee_fwrk_x86_format, format_with_address_padding_64) {
-    expect_format(EE_X86_MODE_64, INSTRUCTION_WITH_REL32_OPD, 0, INSTRUCTION_IN_MODE64_AT_00h_WITH_REL32_OPD_SV);
+    expect_format(EE_X86_MODE_64, INSTRUCTION_WITH_REL32_OPD, 0, INSTRUCTION_64_AT_00h_WITH_REL32_OPD_SV);
 }
 
 TEST(ee_fwrk_x86_format, format_with_imm8_value_padding) {

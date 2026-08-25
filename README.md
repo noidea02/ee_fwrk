@@ -27,7 +27,8 @@ ee_x86 implements the x86 instruction decoder and formatter. As of today, the fo
 
 Other extensions such as AVX-512, AMX and APX are not supported (yet).
 
-ee_x86 is thread safe by default and grows the binary size by roughly 275 kb (decoder: 190 kb). Verification is done by using a proprietary structure-aware differential fuzzer, which uses MSDis (Microsoft Disassembler) as reference. Since MSDis does not support 16-bit mode, only code paths related to 32 and 64-bit mode are subjected to fuzzing.
+ee_x86 is thread-safe by default and grows the binary size by roughly 275 kb (decoder: 190 kb). Verification is done by using a proprietary structure-aware differential fuzzer,
+which uses MSDis (Microsoft Disassembler) as reference. Since MSDis does not support 16-bit mode, only code paths related to 32 and 64-bit mode are subjected to fuzzing.
 
 ee_x86 and fuzzer performance (16 threads):
 ```
@@ -40,7 +41,8 @@ The fuzzer is not part of this repository.
 
 ### Quickstart
 
-In order to integrate ee_x86 into a project, the "include" directory of this repository must be added to the project's include path. No additional steps are required except for including the relevant header files in the code.
+In order to integrate ee_x86 into a project, the "include" directory of this repository must be added to the project's include path. No additional steps are required except for including
+the relevant header files in the code.
 
 Minimal C++ sample:
 ```c++
