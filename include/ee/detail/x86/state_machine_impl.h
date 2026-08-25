@@ -147,24 +147,6 @@ static ee_bool_t ee_prv_x86_state_has_active_vex_prefix(const ee_prv_x86_state_t
     return distate->active_prefixes.num_vex_core_bytes > 0;
 }
 
-static ee_bool_t ee_prv_x86_state_is_vex_vvvv_set(const ee_prv_x86_state_t* distate) {
-
-    ee_uint8_t raw_vvvv_bits = 0;
-
-    if (distate->active_prefixes.num_vex_core_bytes == 1) {
-
-        const ee_uint8_t vex_byte_1 = distate->active_prefixes.vex_core_bytes[0];
-        raw_vvvv_bits = (vex_byte_1 & EE_PRV_X86_VEX_VVVV_MASK) >> 3;
-    }
-    else if (distate->active_prefixes.num_vex_core_bytes == 2) {
-
-        const ee_uint8_t vex_byte_2 = distate->active_prefixes.vex_core_bytes[1];
-        raw_vvvv_bits = (vex_byte_2 & EE_PRV_X86_VEX_VVVV_MASK) >> 3;
-    }
-
-    return (raw_vvvv_bits != 0x0F) ? EE_TRUE : EE_FALSE;
-}
-
 static ee_bool_t ee_prv_x86_state_hints_at_16_bit_operand_usage(const ee_prv_x86_state_t* distate) {
 
     const ee_bool_t mode_16 = ee_prv_x86_state_is_16_bit_mode_active(distate);
@@ -189,24 +171,26 @@ static ee_bool_t ee_prv_x86_state_must_use_modrm16_table(const ee_prv_x86_state_
 static const ee_prv_x86_modrm_mapping_t* ee_prv_x86_state_get_modrm_mapping(ee_prv_x86_state_t* distate) {
 
     ee_byte_t modrm_byte = 0;
+    ee_size_t table_index = 0;
     const ee_prv_x86_modrm_mapping_t* result = 0;
 
     if (!ee_prv_x86_state_advance_bytes(distate, &modrm_byte))
         return 0;
 
+    table_index = modrm_byte;
     if (ee_prv_x86_state_must_use_modrm16_table(distate)) {
 
-        if (modrm_byte >= EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM16_TABLE))
+        if (table_index >= EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM16_TABLE))
             return 0;
 
-        result = &EE_PRV_X86_MODRM16_TABLE[modrm_byte];
+        result = &EE_PRV_X86_MODRM16_TABLE[table_index];
     }
     else {
 
-        if (modrm_byte >= EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM32_TABLE))
+        if (table_index >= EE_GET_ARRAY_LEN(EE_PRV_X86_MODRM32_TABLE))
             return 0;
 
-        result = &EE_PRV_X86_MODRM32_TABLE[modrm_byte];
+        result = &EE_PRV_X86_MODRM32_TABLE[table_index];
     }
 
     return result;
@@ -808,11 +792,6 @@ static ee_bool_t ee_prv_x86_state_process_modrm_byte_into_operands_fine_grained(
     }
 
     return EE_TRUE;
-}
-
-static ee_bool_t ee_prv_x86_state_process_modrm_byte_into_operands(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr_type, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_operand_t* rm, ee_x86_operand_t* reg) {
-
-    return ee_prv_x86_state_process_modrm_byte_into_operands_fine_grained(distate, EE_FALSE, ptr_type, reg_type, reg_size_bits, reg_type, reg_size_bits, rm, reg);
 }
 
 static ee_bool_t ee_prv_x86_state_process_modrm_byte_into_rm_operand(ee_prv_x86_state_t* distate, ee_x86_pointer_type_t ptr_type, ee_x86_register_type_t reg_type, ee_size_t reg_size_bits, ee_x86_operand_t* rm) {

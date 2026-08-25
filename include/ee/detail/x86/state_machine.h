@@ -64,7 +64,6 @@ static ee_bool_t ee_prv_x86_state_has_active_operand_size_override(const ee_prv_
 static ee_bool_t ee_prv_x86_state_has_active_address_size_override(const ee_prv_x86_state_t* distate);
 static ee_bool_t ee_prv_x86_state_has_active_rex_w(const ee_prv_x86_state_t* distate);
 static ee_bool_t ee_prv_x86_state_has_active_vex_prefix(const ee_prv_x86_state_t* distate);
-static ee_bool_t ee_prv_x86_state_is_vex_vvvv_set(const ee_prv_x86_state_t* distate);
 static ee_bool_t ee_prv_x86_state_hints_at_16_bit_operand_usage(const ee_prv_x86_state_t* distate);
 static ee_bool_t ee_prv_x86_state_hints_at_16_bit_address_usage(const ee_prv_x86_state_t* distate);
 static ee_bool_t ee_prv_x86_state_consume_immediate_bytes(ee_prv_x86_state_t* distate, ee_size_t num_bits, ee_int64_t* immb);

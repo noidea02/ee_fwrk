@@ -212,16 +212,6 @@ static ee_pe_error_t ee_prv_pe_rii_state_read_optional_header(ee_prv_pe_rii_stat
     return EE_PE_SUCCESS;
 }
 
-static const ee_prv_pe_data_dir_t* ee_prv_pe_rii_state_get_data_dir(ee_prv_pe_rii_state_t* state, ee_prv_pe_data_dir_index_t index) {
-
-    const ee_size_t index_val = (ee_size_t)index;
-
-    if (index_val >= state->opt_header.number_of_rva_and_sizes)
-        return 0;
-
-    return &state->opt_header.data_dirs[index_val];
-}
-
 static ee_pe_error_t ee_prv_pe_rii_state_read_section_table(ee_prv_pe_rii_state_t* state) {
 
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
@@ -417,10 +407,6 @@ static ee_pe_error_t ee_prv_pe_read_string(const ee_read_data_wrapper_t* read_da
     }
 
     return EE_PE_PREDEFINED_LIMIT_REACHED;
-}
-
-static ee_bool_t ee_prv_pe_section_info_is_valid(const ee_pe_section_info_t* info) {
-    return info && info->raw_size;
 }
 
 static ee_pe_error_t ee_prv_pe_rii_state_collect_imported_symbol_info(ee_prv_pe_rii_state_t* state, const ee_prv_pe_imported_dll_info_t* dll_info, const ee_prv_pe_import_lookup_table_entry_info_t* ilt_entry_info, ee_pe_symbol_info_t* out) {

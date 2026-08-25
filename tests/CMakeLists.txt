@@ -1,8 +1,9 @@
 include(FetchContent)
 FetchContent_Declare(
     googletest
-    URL      https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
-    URL_HASH SHA256=40d4ec942217dcc84a9ebe2a68584ada7d4a33a8ee958755763278ea1c5e18ff
+    URL      https://github.com/google/googletest/releases/download/v1.18.0/googletest-1.18.0.tar.gz
+    URL_HASH SHA256=6e3191c1455468b3fc35a417fb565c1c5071aee1b7e7f85e30cf48a98d37d8b5
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(googletest)
 

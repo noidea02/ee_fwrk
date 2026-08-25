@@ -138,6 +138,8 @@ static void mutex_unlock(ee_uint32_t* mtx) {
 }
 
 /* Heap
+
+   WARNING: Heap implementation has NOT been subjected to QA procedures. Usage outside of the sample projects of ee_fwrk is discouraged.
 */
 
 static ee_bool_t heap_is_address_aligned(const void* ptr) {

@@ -164,49 +164,6 @@ static ee_bool_t ee_prv_x86_process_operands_axOeaxOraxMODEpASO_cxOecxOrcxMODE_d
         && ee_prv_x86_state_append_gppreg_operand_as_is(distate, reg2_type);
 }
 
-static ee_bool_t ee_prv_x86_process_operands_axOeaxOraxMODEpASO_cxOecxOrcxMODEpASO_dxOedxOrdxMODEpASO(ee_prv_x86_state_t* distate) {
-
-    const ee_bool_t has_addr_size_override = ee_prv_x86_state_has_active_address_size_override(distate);
-    ee_x86_gpp_register_type_t reg0_type = EE_X86_GPP_REGISTER_NOT_EXISTING;
-    ee_x86_gpp_register_type_t reg1_type = EE_X86_GPP_REGISTER_NOT_EXISTING;
-    ee_x86_gpp_register_type_t reg2_type = EE_X86_GPP_REGISTER_NOT_EXISTING;
-
-    if (ee_prv_x86_state_is_64_bit_mode_active(distate)) {
-
-        if (has_addr_size_override) {
-            
-            reg0_type = EE_X86_GPP_REGISTER_EAX;
-            reg1_type = EE_X86_GPP_REGISTER_ECX;
-            reg2_type = EE_X86_GPP_REGISTER_EDX;
-        }
-        else {
-            
-            reg0_type = EE_X86_GPP_REGISTER_RAX;
-            reg1_type = EE_X86_GPP_REGISTER_RCX;
-            reg2_type = EE_X86_GPP_REGISTER_RDX;
-        }
-    }
-    else {
-
-        if (ee_prv_x86_state_hints_at_16_bit_address_usage(distate)) {
-            
-            reg0_type = EE_X86_GPP_REGISTER_AX;
-            reg1_type = EE_X86_GPP_REGISTER_CX;
-            reg2_type = EE_X86_GPP_REGISTER_DX;
-        }
-        else {
-            
-            reg0_type = EE_X86_GPP_REGISTER_EAX;
-            reg1_type = EE_X86_GPP_REGISTER_ECX;
-            reg2_type = EE_X86_GPP_REGISTER_EDX;
-        }
-    }
-
-    return ee_prv_x86_state_append_gppreg_operand_as_is(distate, reg0_type)
-        && ee_prv_x86_state_append_gppreg_operand_as_is(distate, reg1_type)
-        && ee_prv_x86_state_append_gppreg_operand_as_is(distate, reg2_type);
-}
-
 static ee_bool_t ee_prv_x86_process_operands_byte_ptr_bxOebxOrbx(ee_prv_x86_state_t* distate) {
 
     const ee_bool_t has_addr_size_override = ee_prv_x86_state_has_active_address_size_override(distate);
@@ -858,11 +815,6 @@ static ee_bool_t ee_prv_x86_process_operands_modrm_rm16_r16(ee_prv_x86_state_t* 
 static ee_bool_t ee_prv_x86_process_operands_modrm_r8_rm8(ee_prv_x86_state_t* distate) {
 
     return ee_prv_x86_state_process_and_append_modrm_reg_rm_operands(distate, EE_X86_REGISTER_GENERAL_PURPOSE, 8, EE_X86_POINTER_BYTE, EE_FALSE);
-}
-
-static ee_bool_t ee_prv_x86_process_operands_modrm_r32_rm32(ee_prv_x86_state_t* distate) {
-
-    return ee_prv_x86_state_process_and_append_modrm_reg_rm_operands(distate, EE_X86_REGISTER_GENERAL_PURPOSE, 32, EE_X86_POINTER_DWORD, EE_FALSE);
 }
 
 static ee_bool_t ee_prv_x86_process_operands_modrm_rm16x32x64_r16x32x64(ee_prv_x86_state_t* distate) {
@@ -2676,16 +2628,6 @@ static ee_bool_t ee_prv_x86_process_operands_plusr_r16x32(ee_prv_x86_state_t* di
 
     if (ee_prv_x86_state_hints_at_16_bit_operand_usage(distate))
         reg_size_bits = 16;
-
-    return ee_prv_x86_state_process_and_append_plusr_gppreg_operand(distate, reg_size_bits);
-}
-
-static ee_bool_t ee_prv_x86_process_operands_plusr_r32x64(ee_prv_x86_state_t* distate) {
-
-    ee_size_t reg_size_bits = 32;
-
-    if (ee_prv_x86_state_has_active_rex_w(distate))
-        reg_size_bits = 64;
 
     return ee_prv_x86_state_process_and_append_plusr_gppreg_operand(distate, reg_size_bits);
 }
