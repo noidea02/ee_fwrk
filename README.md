@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
     ee_ascii_char_t instruction_str[256]{};
     ee_size_t instruction_str_size{ sizeof(instruction_str) - 1 };
 
-    if (!ee_x86_format(EE_X86_MODE_64, instruction_address, &disasm_out, instruction_str, &instruction_str_size)) {
+    if (!ee_x86_format(EE_X86_MODE_64, instruction_address, &disasm_out, nullptr, instruction_str, &instruction_str_size)) {
         return 1; // Something went wrong, the string buffer may be too small.
     }
 
