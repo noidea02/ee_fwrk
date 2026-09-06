@@ -7,6 +7,8 @@
 
 #include "ee/detail/x86f/lookup_impl.h"
 
+#define EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN 96
+
 typedef struct {
 
     ee_bool_t ignored;
@@ -15,12 +17,16 @@ typedef struct {
     ee_bool_t has_active_address_size_override;
     ee_uint64_t inst_addr;
     ee_uint64_t inst_size;
+    ee_x86_symbolize_address_t opt_symbolize_address;
 
 } ee_prv_x86f_base_params_t;
 
-static ee_bool_t ee_prv_x86f_format_printable_prefixes(const ee_x86_prefix_type_t* printable_prefixes, ee_size_t num_printable_prefixes, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_printable_prefixes(const ee_x86_prefix_type_t* printable_prefixes, ee_size_t num_printable_prefixes, ee_x86_tokens_t* tokens) {
 
     ee_size_t index = 0;
+
+    if (num_printable_prefixes > EE_GET_ARRAY_LEN(tokens->prefixes))
+        return EE_FALSE;
 
     for (; index != num_printable_prefixes; ++index) {
 
@@ -36,10 +42,10 @@ static ee_bool_t ee_prv_x86f_format_printable_prefixes(const ee_x86_prefix_type_
         if (!cur_prefix_str)
             return EE_FALSE;
 
-        if (!ee_strapp(output, output_buf_size, cur_prefix_str) || !ee_strapp(output, output_buf_size, EE_SL(" ")))
-            return EE_FALSE;
+        ee_strncpy(tokens->prefixes[index], cur_prefix_str, sizeof(tokens->prefixes[index]));
     }
 
+    tokens->num_prefixes = index;
     return EE_TRUE;
 }
 
@@ -148,6 +154,18 @@ static ee_bool_t ee_prv_x86f_format_relative_address_operand(const ee_prv_x86f_b
         final_addr &= (ee_uint64_t)0xffff;
     }
 
+    /* Check for symbolized address. */
+    if (base_params->opt_symbolize_address) {
+
+        ee_ascii_char_t symbolized_addr[EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN] = { 0 };
+        if (base_params->opt_symbolize_address(final_addr, EE_TRUE, symbolized_addr, sizeof(symbolized_addr))) {
+
+            ee_strncpy(output, symbolized_addr, output_buf_size);
+            return EE_TRUE;
+        }
+    }
+
+    /* Proceed with unsymbolized address. */
     if (!ee_itoa64(final_addr, addr_str, sizeof(addr_str), EE_TRUE))
         return EE_FALSE;
 
@@ -299,7 +317,7 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand_index(const ee_x86_pointer_o
     return EE_TRUE;
 }
 
-static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_static_address, ee_size_t disp_num_bits, ee_int64_t disp, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_static_address, ee_x86_symbolize_address_t opt_symbolize_address, ee_size_t disp_num_bits, ee_int64_t disp, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_int64_t actual_disp = 0;
     ee_size_t desired_disp_str_len = 0;
@@ -316,6 +334,16 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_st
     if (is_static_address) {
 
         actual_disp = disp;
+
+        /* Check for symbolized address. */
+        if (opt_symbolize_address) {
+
+            ee_ascii_char_t symbolized_addr[EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN] = { 0 };
+            if (opt_symbolize_address((ee_uint64_t)actual_disp, EE_TRUE, symbolized_addr, sizeof(symbolized_addr)))
+                return ee_strapp(output, output_buf_size, symbolized_addr);
+        }
+
+        /* Proceed with unsymbolized address. */
         desired_disp_str_len = disp_num_bits / 8 * 2;
     }
     else {
@@ -448,6 +476,7 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand(const ee_prv_x86f_base_param
         /* Operator (+ or -) can only reliably be determined by the formatting function, hence we cannot append it beforehand. */
         if (!ee_prv_x86f_format_pointer_operand_displacement(
             !has_base,
+            base_params->opt_symbolize_address,
             actual_disp_num_bits,
             actual_disp,
             output,
@@ -464,7 +493,7 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand(const ee_prv_x86f_base_param
     return EE_TRUE;
 }
 
-static ee_bool_t ee_prv_x86f_format_immediate_value_operand(const ee_x86_immediate_value_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_immediate_value_operand(const ee_prv_x86f_base_params_t* base_params, const ee_x86_immediate_value_operand_t* operand, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_ascii_char_t imm_val_str[17] = { 0 };
     ee_ascii_char_t padded_imm_val_str[17] = { 0 };
@@ -473,6 +502,18 @@ static ee_bool_t ee_prv_x86f_format_immediate_value_operand(const ee_x86_immedia
     ee_size_t str_len = 0;
     ee_size_t desired_str_len = 0;
 
+    /* Check for symbolized address. */
+    if (base_params->opt_symbolize_address && (operand->value_num_bits == 32 || operand->value_num_bits == 64)) {
+
+        ee_ascii_char_t symbolized_addr[EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN] = { 0 };
+        if (base_params->opt_symbolize_address((ee_uint64_t)operand->value, EE_FALSE, symbolized_addr, sizeof(symbolized_addr))) {
+
+            ee_strncpy(output, symbolized_addr, output_buf_size);
+            return EE_TRUE;
+        }
+    }
+
+    /* Proceed with unsymbolized address. */
     if (!ee_itoa64(operand->value, imm_val_str, sizeof(imm_val_str), EE_TRUE))
         return EE_FALSE;
 
@@ -493,86 +534,57 @@ static ee_bool_t ee_prv_x86f_format_immediate_value_operand(const ee_x86_immedia
     return ee_strapp(output, output_buf_size, padded_imm_val_str) && ee_strapp(output, output_buf_size, EE_SL("h"));
 }
 
-ee_bool_t ee_x86_format(ee_x86_mode_t mode, ee_uint64_t instruction_address, const ee_x86_disasm_output_t* disasm_output, ee_ascii_char_t* format, ee_size_t* format_size) {
+ee_bool_t ee_x86_format(ee_x86_mode_t mode, ee_uint64_t instruction_address, const ee_x86_disasm_output_t* disasm_output, ee_x86_symbolize_address_t opt_symbolize_address, ee_ascii_char_t* format, ee_size_t* format_size) {
 
-    ee_prv_x86f_base_params_t base_params = { 0 };
-
-    ee_ascii_char_t tmp_format[256] = { 0 };
+    ee_x86_tokens_t tokens = { 0 };
+    ee_ascii_char_t tmp_format[sizeof(tokens) + 1] = { 0 };
     ee_size_t required_format_size = 0;
-    const ee_size_t available_format_size = *format_size;
+    ee_size_t available_format_size = 0;
 
-    ee_ascii_char_t inst_str_buf[64] = { 0 };
-    const ee_ascii_char_t* inst_str = 0;
-
-    base_params.active_mode = mode;
-    base_params.has_active_operand_size_override = disasm_output->prefixes.operand_size_override;
-    base_params.has_active_address_size_override = disasm_output->prefixes.address_size_override;
-    base_params.inst_addr = instruction_address;
-    base_params.inst_size = disasm_output->num_instruction_bytes;
-
-    /* 1) Process prefixes (if any). */
-    if (!ee_prv_x86f_format_printable_prefixes(disasm_output->prefixes.printable_prefixes, disasm_output->prefixes.num_printable_prefixes, tmp_format, sizeof(tmp_format)))
+    if (!disasm_output || !format_size)
         return EE_FALSE;
 
-    /* 2) Process instruction. */
-    inst_str = ee_prv_x86f_lookup_instruction_str(disasm_output->instruction, inst_str_buf, sizeof(inst_str_buf));
-    if (!inst_str || !ee_strapp(tmp_format, sizeof(tmp_format), inst_str))
+    available_format_size = *format_size;
+
+    if (!ee_x86_format_into_tokens(mode, instruction_address, disasm_output, opt_symbolize_address, &tokens))
         return EE_FALSE;
 
-    /* 3) Process operands (if any). */
-    if (disasm_output->num_operands) {
+    if (tokens.num_prefixes > EE_GET_ARRAY_LEN(tokens.prefixes) || tokens.num_operands > EE_GET_ARRAY_LEN(tokens.operands))
+        return EE_FALSE;
+
+    /* 1) Append prefix strings (if any). */
+    if (tokens.num_prefixes) {
+
+        ee_size_t prefix_index = 0;
+        for (; prefix_index != tokens.num_prefixes; ++prefix_index) {
+
+            if (!ee_strapp(tmp_format, sizeof(tmp_format), tokens.prefixes[prefix_index]) || !ee_strapp(tmp_format, sizeof(tmp_format), " "))
+                return EE_FALSE;
+        }
+    }
+
+    /* 2) Append instruction string. */
+    if (!ee_strapp(tmp_format, sizeof(tmp_format), tokens.instruction))
+        return EE_FALSE;
+
+    /* 3) Append operand strings (if any). */
+    if (tokens.num_operands) {
 
         ee_size_t operand_index = 0;
-
-        if (!ee_strapp(tmp_format, sizeof(tmp_format), EE_SL(" ")))
+        if (!ee_strapp(tmp_format, sizeof(tmp_format), " "))
             return EE_FALSE;
 
-        for (; operand_index != disasm_output->num_operands; ++operand_index) {
+        for (; operand_index != tokens.num_operands; ++operand_index) {
 
-            const ee_x86_operand_t* const operand = &disasm_output->operands[operand_index];
-            ee_bool_t operand_processed = EE_FALSE;
-
-            switch (operand->type) {
-
-            case EE_X86_OPERAND_RELATIVE_ADDRESS:
-
-                operand_processed = ee_prv_x86f_format_relative_address_operand(&base_params, &operand->un.relative_address, tmp_format, sizeof(tmp_format));
-                break;
-
-            case EE_X86_OPERAND_FAR_POINTER:
-
-                operand_processed = ee_prv_x86f_format_far_pointer_operand(&operand->un.far_pointer, tmp_format, sizeof(tmp_format));
-                break;
-
-            case EE_X86_OPERAND_REGISTER:
-
-                operand_processed = ee_prv_x86f_format_register_operand(&operand->un.reg1ster, tmp_format, sizeof(tmp_format));
-                break;
-
-            case EE_X86_OPERAND_IMMEDIATE_VALUE:
-
-                operand_processed = ee_prv_x86f_format_immediate_value_operand(&operand->un.immediate_value, tmp_format, sizeof(tmp_format));
-                break;
-
-            case EE_X86_OPERAND_POINTER:
-
-                operand_processed = ee_prv_x86f_format_pointer_operand(&base_params, &operand->un.pointer, tmp_format, sizeof(tmp_format));
-                break;
-
-            default:
-
-                break;
-            }
-
-            if (!operand_processed)
+            if (!ee_strapp(tmp_format, sizeof(tmp_format), tokens.operands[operand_index]))
                 return EE_FALSE;
 
-            if (operand_index != disasm_output->num_operands - 1) {
+            if (operand_index != tokens.num_operands - 1) {
 
-                ee_ascii_char_t deob_buf[64] = { 0 };
+                ee_ascii_char_t deob_buf[8] = { 0 };
                 const ee_size_t deob_buf_size = sizeof(deob_buf);
 
-                if (!ee_strapp(tmp_format, sizeof(tmp_format), EE_OBFUSCATED_SL("\xE0\xEC", deob_buf, deob_buf_size))) /* ", " */
+                if (!ee_strapp(tmp_format, sizeof(tmp_format), EE_OBFUSCATED_SL("\xE0\xEC", deob_buf, deob_buf_size))) // ", "
                     return EE_FALSE;
             }
         }
@@ -583,7 +595,100 @@ ee_bool_t ee_x86_format(ee_x86_mode_t mode, ee_uint64_t instruction_address, con
     if (required_format_size > available_format_size)
         return EE_FALSE;
 
+    if (!format)
+        return EE_FALSE;
+
     ee_strncpy(format, tmp_format, available_format_size);
+    return EE_TRUE;
+}
+
+ee_bool_t ee_x86_format_into_tokens(ee_x86_mode_t mode, ee_uint64_t instruction_address, const ee_x86_disasm_output_t* disasm_output, ee_x86_symbolize_address_t opt_symbolize_address, ee_x86_tokens_t* tokens) {
+    
+    ee_prv_x86f_base_params_t base_params = { 0 };
+    ee_x86_tokens_t tmp_tokens = { 0 };
+
+    ee_ascii_char_t inst_str_buf[64] = { 0 };
+    const ee_ascii_char_t* inst_str = 0;
+
+    if (!disasm_output || !tokens)
+        return EE_FALSE;
+
+    if (disasm_output->prefixes.num_printable_prefixes > EE_GET_ARRAY_LEN(tmp_tokens.prefixes)
+        || disasm_output->num_operands > EE_GET_ARRAY_LEN(tmp_tokens.operands)) {
+        
+        return EE_FALSE;
+    }
+
+    base_params.active_mode = mode;
+    base_params.has_active_operand_size_override = disasm_output->prefixes.operand_size_override;
+    base_params.has_active_address_size_override = disasm_output->prefixes.address_size_override;
+    base_params.inst_addr = instruction_address;
+    base_params.inst_size = disasm_output->num_instruction_bytes;
+    base_params.opt_symbolize_address = opt_symbolize_address;
+
+    /* 1) Process prefixes (if any). */
+    if (!ee_prv_x86f_format_printable_prefixes(disasm_output->prefixes.printable_prefixes, disasm_output->prefixes.num_printable_prefixes, &tmp_tokens))
+        return EE_FALSE;
+
+    /* 2) Process instruction. */
+    inst_str = ee_prv_x86f_lookup_instruction_str(disasm_output->instruction, inst_str_buf, sizeof(inst_str_buf));
+    if (!inst_str)
+        return EE_FALSE;
+
+    ee_strncpy(tmp_tokens.instruction, inst_str, sizeof(tmp_tokens.instruction));
+
+    /* 3) Process operands (if any). */
+    if (disasm_output->num_operands) {
+
+        ee_size_t operand_index = 0;
+        for (; operand_index != disasm_output->num_operands; ++operand_index) {
+
+            const ee_x86_operand_t* const operand = &disasm_output->operands[operand_index];
+            ee_bool_t operand_processed = EE_FALSE;
+
+            ee_ascii_char_t* const operand_str_buf = tmp_tokens.operands[operand_index];
+            const ee_size_t operand_str_buf_size = sizeof(tmp_tokens.operands[operand_index]);
+
+            switch (operand->type) {
+
+            case EE_X86_OPERAND_RELATIVE_ADDRESS:
+
+                operand_processed = ee_prv_x86f_format_relative_address_operand(&base_params, &operand->un.relative_address, operand_str_buf, operand_str_buf_size);
+                break;
+
+            case EE_X86_OPERAND_FAR_POINTER:
+
+                operand_processed = ee_prv_x86f_format_far_pointer_operand(&operand->un.far_pointer, operand_str_buf, operand_str_buf_size);
+                break;
+
+            case EE_X86_OPERAND_REGISTER:
+
+                operand_processed = ee_prv_x86f_format_register_operand(&operand->un.reg1ster, operand_str_buf, operand_str_buf_size);
+                break;
+
+            case EE_X86_OPERAND_IMMEDIATE_VALUE:
+
+                operand_processed = ee_prv_x86f_format_immediate_value_operand(&base_params, &operand->un.immediate_value, operand_str_buf, operand_str_buf_size);
+                break;
+
+            case EE_X86_OPERAND_POINTER:
+
+                operand_processed = ee_prv_x86f_format_pointer_operand(&base_params, &operand->un.pointer, operand_str_buf, operand_str_buf_size);
+                break;
+
+            default:
+
+                break;
+            }
+
+            if (!operand_processed)
+                return EE_FALSE;
+        }
+
+        tmp_tokens.num_operands = operand_index;
+    }
+
+    *tokens = tmp_tokens;
     return EE_TRUE;
 }
 

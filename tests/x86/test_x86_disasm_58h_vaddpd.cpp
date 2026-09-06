@@ -22,7 +22,7 @@ namespace {
 
 TEST(ee_fwrk_x86, disasm_32_vaddpd_C5h_F1h_58h_C2h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 0 },
+    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, {}, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 0 },
         { EE_X86_REGISTER_AVX_128, 128, 1 }, { EE_X86_REGISTER_AVX_128, 128, 2 }) };
 
     ee_x86_disasm_output out{};
@@ -32,7 +32,7 @@ TEST(ee_fwrk_x86, disasm_32_vaddpd_C5h_F1h_58h_C2h) {
 
 TEST(ee_fwrk_x86, disasm_64_vaddpd_C4h_C1h_71h_58h_C0h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 0 },
+    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(5, {}, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 0 },
         { EE_X86_REGISTER_AVX_128, 128, 1 }, { EE_X86_REGISTER_AVX_128, 128, 8 }) };
 
     ee_x86_disasm_output out{};
@@ -42,7 +42,7 @@ TEST(ee_fwrk_x86, disasm_64_vaddpd_C4h_C1h_71h_58h_C0h) {
 
 TEST(ee_fwrk_x86, disasm_64_vaddpd_C5h_B1h_58h_C2h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 0 },
+    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, {}, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 0 },
         { EE_X86_REGISTER_AVX_128, 128, 9 }, { EE_X86_REGISTER_AVX_128, 128, 2 }) };
 
     ee_x86_disasm_output out{};
@@ -52,7 +52,7 @@ TEST(ee_fwrk_x86, disasm_64_vaddpd_C5h_B1h_58h_C2h) {
 
 TEST(ee_fwrk_x86, disasm_64_vaddpd_C5h_71h_58h_C2h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 8 },
+    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, {}, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 8 },
         { EE_X86_REGISTER_AVX_128, 128, 1 }, { EE_X86_REGISTER_AVX_128, 128, 2 }) };
 
     ee_x86_disasm_output out{};
@@ -62,7 +62,7 @@ TEST(ee_fwrk_x86, disasm_64_vaddpd_C5h_71h_58h_C2h) {
 
 TEST(ee_fwrk_x86, disasm_64_vaddpd_C4h_C1h_71h_58h_00h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 0 },
+    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(5, {}, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 0 },
         { EE_X86_REGISTER_AVX_128, 128, 1 }, x86_ptr_opd_with_extended_base{ EE_X86_POINTER_XMMWORD, 8, 64 }) };
 
     ee_x86_disasm_output out{};
@@ -72,7 +72,7 @@ TEST(ee_fwrk_x86, disasm_64_vaddpd_C4h_C1h_71h_58h_00h) {
 
 TEST(ee_fwrk_x86, disasm_64_vaddpd_C5h_F1h_58h_01h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 0 },
+    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, {}, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_128, 128, 0 },
         { EE_X86_REGISTER_AVX_128, 128, 1 }, x86_ptr_opd{ EE_X86_POINTER_XMMWORD, EE_X86_GPP_REGISTER_RCX }) };
 
     ee_x86_disasm_output out{};
@@ -82,7 +82,7 @@ TEST(ee_fwrk_x86, disasm_64_vaddpd_C5h_F1h_58h_01h) {
 
 TEST(ee_fwrk_x86, disasm_16_vaddpd_C5h_F5h_58h_00h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_256, 256, 0 },
+    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, {}, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_256, 256, 0 },
         { EE_X86_REGISTER_AVX_256, 256, 1 }, x86_ptr_opd{ EE_X86_POINTER_YMMWORD, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_SI }) };
 
     ee_x86_disasm_output out{};
@@ -92,7 +92,7 @@ TEST(ee_fwrk_x86, disasm_16_vaddpd_C5h_F5h_58h_00h) {
 
 TEST(ee_fwrk_x86, disasm_32_vaddpd_C5h_F5h_58h_00h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_256, 256, 0 },
+    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, {}, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_256, 256, 0 },
         { EE_X86_REGISTER_AVX_256, 256, 1 }, x86_ptr_opd{ EE_X86_POINTER_YMMWORD, EE_X86_GPP_REGISTER_EAX }) };
 
     ee_x86_disasm_output out{};
@@ -102,7 +102,7 @@ TEST(ee_fwrk_x86, disasm_32_vaddpd_C5h_F5h_58h_00h) {
 
 TEST(ee_fwrk_x86, disasm_64_vaddpd_C5h_F5h_58h_00h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_256, 256, 0 },
+    static constexpr auto expected{ create_x86_disasm_output_with_three_operands(4, {}, EE_X86_INSTRUCTION_VADDPD, { EE_X86_REGISTER_AVX_256, 256, 0 },
         { EE_X86_REGISTER_AVX_256, 256, 1 }, x86_ptr_opd{ EE_X86_POINTER_YMMWORD, EE_X86_GPP_REGISTER_RAX }) };
 
     ee_x86_disasm_output out{};

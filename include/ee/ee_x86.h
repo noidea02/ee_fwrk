@@ -1248,8 +1248,8 @@ typedef enum {
     EE_X86_REGISTER_SEGMENT, /* Segment register */
     EE_X86_REGISTER_X87, /* x87 FPU register */
     EE_X86_REGISTER_MMX, /* Multi Media Extension register */
-    EE_X86_REGISTER_AVX_128, /* 128-bit SSE-AVX floating-point register */
-    EE_X86_REGISTER_AVX_256, /* 256-bit AVX floating-point register */
+    EE_X86_REGISTER_AVX_128, /* 128-bit SSE-AVX vector register */
+    EE_X86_REGISTER_AVX_256, /* 256-bit AVX vector register */
     EE_X86_REGISTER_CONTROL, /* Control register */
     EE_X86_REGISTER_DEBUG, /* Debug register */
     EE_X86_REGISTER_MPX /* Memory protection extension register */
@@ -1322,7 +1322,7 @@ typedef enum {
 
     EE_X86_POINTER_NOT_EXISTING,
 
-    /* Pointer to integer (or arbitrary value) */
+    /* Core pointer types */
     EE_X86_POINTER_BYTE, /* 8-bit */
     EE_X86_POINTER_WORD, /* 16-bit */
     EE_X86_POINTER_DWORD, /* 32-bit */
@@ -1331,7 +1331,7 @@ typedef enum {
     EE_X86_POINTER_TBYTE, /* 80-bit */
     EE_X86_POINTER_OWORD, /* 128-bit */
 
-    /* Pointer to floating point number */
+    /* SIMD pointer types */
     EE_X86_POINTER_MMWORD, /* 64-bit */
     EE_X86_POINTER_XMMWORD, /* 128-bit */
     EE_X86_POINTER_YMMWORD, /* 256-bit */

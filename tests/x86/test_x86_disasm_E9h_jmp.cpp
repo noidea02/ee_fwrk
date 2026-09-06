@@ -22,7 +22,7 @@ namespace {
 
 TEST(ee_fwrk_x86, disasm_16_jmp_E9h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(3, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 16, 0x3344 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(3, {}, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 16, 0x3344 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_16, JMP_11223344h.data(), JMP_11223344h.size(), &is));
@@ -31,7 +31,7 @@ TEST(ee_fwrk_x86, disasm_16_jmp_E9h) {
 
 TEST(ee_fwrk_x86, disasm_16_jmp_66h_E9h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(6, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(6, { EE_TRUE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_16, OSO_JMP_11223344h.data(), OSO_JMP_11223344h.size(), &is));
@@ -67,7 +67,7 @@ TEST(ee_fwrk_x86, disasm_16_jmp_67h_66h_E9h) {
 
 TEST(ee_fwrk_x86, disasm_32_jmp_E9h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(5, {}, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_32, JMP_11223344h.data(), JMP_11223344h.size(), &is));
@@ -76,7 +76,7 @@ TEST(ee_fwrk_x86, disasm_32_jmp_E9h) {
 
 TEST(ee_fwrk_x86, disasm_32_jmp_66h_E9h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(4, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 16, 0x3344 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(4, { EE_TRUE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 16, 0x3344 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_32, OSO_JMP_11223344h.data(), OSO_JMP_11223344h.size(), &is));
@@ -112,7 +112,7 @@ TEST(ee_fwrk_x86, disasm_32_jmp_67h_66h_E9h) {
 
 TEST(ee_fwrk_x86, disasm_64_jmp_E9h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(5, {}, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_64, JMP_11223344h.data(), JMP_11223344h.size(), &is));
@@ -121,7 +121,7 @@ TEST(ee_fwrk_x86, disasm_64_jmp_E9h) {
 
 TEST(ee_fwrk_x86, disasm_64_jmp_66h_E9h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(6, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(6, { EE_TRUE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_64, OSO_JMP_11223344h.data(), OSO_JMP_11223344h.size(), &is));
@@ -157,7 +157,7 @@ TEST(ee_fwrk_x86, disasm_64_jmp_67h_66h_E9h) {
 
 TEST(ee_fwrk_x86, disasm_64_jmp_4Fh_E9h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(6, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(6, {}, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_64, REXWRXB_JMP_11223344h.data(), REXWRXB_JMP_11223344h.size(), &is));
@@ -166,7 +166,7 @@ TEST(ee_fwrk_x86, disasm_64_jmp_4Fh_E9h) {
 
 TEST(ee_fwrk_x86, disasm_64_jmp_4Fh_66h_E9h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(7, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(7, { EE_TRUE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_64, REXWRXB_OSO_JMP_11223344h.data(), REXWRXB_OSO_JMP_11223344h.size(), &is));
@@ -175,7 +175,7 @@ TEST(ee_fwrk_x86, disasm_64_jmp_4Fh_66h_E9h) {
 
 TEST(ee_fwrk_x86, disasm_64_jmp_66h_4Fh_E9h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(7, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(7, { EE_TRUE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x11223344 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_64, OSO_REXWRXB_JMP_11223344h.data(), OSO_REXWRXB_JMP_11223344h.size(), &is));

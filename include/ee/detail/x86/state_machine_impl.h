@@ -2410,12 +2410,11 @@ ee_bool_t ee_x86_disasm(ee_x86_mode_t mode, const ee_byte_t* bytes, ee_size_t nu
 
     /* 7) Write output. */
     output->num_instruction_bytes = distate.byte_index;
+    output->prefixes = distate.final_prefixes;
     output->instruction = distate.instruction;
     output->num_operands = distate.num_operands;
 
-    ee_memcpy(&output->prefixes, &distate.final_prefixes, sizeof(output->prefixes));
     ee_memcpy(output->operands, distate.operands, sizeof(output->operands));
-
     return EE_TRUE;
 }
 

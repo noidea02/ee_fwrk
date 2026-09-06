@@ -25,7 +25,7 @@ namespace {
         ee_size_t req_size{ 256 };
         const auto out{ std::make_unique<ee_ascii_char_t[]>(req_size) };
 
-        ASSERT_TRUE(ee_x86_format(mode, addr, &dis_out, out.get(), &req_size));
+        ASSERT_TRUE(ee_x86_format(mode, addr, &dis_out, nullptr, out.get(), &req_size));
         EXPECT_STREQ(out.get(), std::string(expected).c_str());
     }
 }

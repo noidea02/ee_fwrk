@@ -22,7 +22,7 @@ namespace {
 
 TEST(ee_fwrk_x86, disasm_16_inc_FFh) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_AX) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(2, {}, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_AX) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_16, INC_EAX.data(), INC_EAX.size(), &is));
@@ -31,7 +31,7 @@ TEST(ee_fwrk_x86, disasm_16_inc_FFh) {
 
 TEST(ee_fwrk_x86, disasm_16_inc_66h_FFh) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(3, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_EAX) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(3, { EE_TRUE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_EAX) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_16, OSO_INC_EAX.data(), OSO_INC_EAX.size(), &is));
@@ -67,7 +67,7 @@ TEST(ee_fwrk_x86, disasm_16_inc_67h_66h_FFh) {
 
 TEST(ee_fwrk_x86, disasm_32_inc_FFh) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_EAX) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(2, {}, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_EAX) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_32, INC_EAX.data(), INC_EAX.size(), &is));
@@ -76,7 +76,7 @@ TEST(ee_fwrk_x86, disasm_32_inc_FFh) {
 
 TEST(ee_fwrk_x86, disasm_32_inc_66h_FFh) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(3, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_AX) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(3, { EE_TRUE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_AX) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_32, OSO_INC_EAX.data(), OSO_INC_EAX.size(), &is));
@@ -112,7 +112,7 @@ TEST(ee_fwrk_x86, disasm_32_inc_67h_66h_FFh) {
 
 TEST(ee_fwrk_x86, disasm_64_inc_FFh) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_EAX) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(2, {}, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_EAX) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_64, INC_EAX.data(), INC_EAX.size(), &is));
@@ -121,7 +121,7 @@ TEST(ee_fwrk_x86, disasm_64_inc_FFh) {
 
 TEST(ee_fwrk_x86, disasm_64_inc_66h_FFh) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(3, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_AX) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(3, { EE_TRUE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_AX) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_64, OSO_INC_EAX.data(), OSO_INC_EAX.size(), &is));
@@ -157,7 +157,7 @@ TEST(ee_fwrk_x86, disasm_64_inc_67h_66h_FFh) {
 
 TEST(ee_fwrk_x86, disasm_64_inc_48h_FFh) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(3, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_RAX) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(3, {}, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_RAX) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_64, REXW_INC_RAX.data(), REXW_INC_RAX.size(), &is));
@@ -166,7 +166,7 @@ TEST(ee_fwrk_x86, disasm_64_inc_48h_FFh) {
 
 TEST(ee_fwrk_x86, disasm_64_inc_66h_48h_FFh) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(4, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_RAX) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(4, { EE_TRUE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_RAX) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_64, OSO_REXW_INC_RAX.data(), OSO_REXW_INC_RAX.size(), &is));
@@ -175,7 +175,7 @@ TEST(ee_fwrk_x86, disasm_64_inc_66h_48h_FFh) {
 
 TEST(ee_fwrk_x86, disasm_64_inc_48h_66h_FFh) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(4, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_AX) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(4, { EE_TRUE }, EE_X86_INSTRUCTION_INC, EE_X86_GPP_REGISTER_AX) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_64, REXW_OSO_INC_EAX.data(), REXW_OSO_INC_EAX.size(), &is));

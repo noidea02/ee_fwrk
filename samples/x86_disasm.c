@@ -216,7 +216,7 @@ int disassemble_and_print(ee_x86_mode_t mode, ee_byte_t* instruction, ee_size_t 
             return 1;
 
         /* Obtain string representation of ee_x86 decoder output. */
-        if (!ee_x86_format(mode, base_addr + byte_index, &dis_out, dis_format, &dis_format_size))
+        if (!ee_x86_format(mode, base_addr + byte_index, &dis_out, EE_NULL, dis_format, &dis_format_size))
             return 1;
 
         nc_println(dis_format);

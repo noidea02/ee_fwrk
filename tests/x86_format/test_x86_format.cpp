@@ -1,4 +1,5 @@
 #include <array>
+#include <functional>
 #include <memory>
 #include <span>
 #include <string>
@@ -11,6 +12,8 @@
 #include <ee_support/utils.hpp>
 
 using namespace ee_supp;
+
+#define MAX_LEN_MODULE_NAME_FOR_3_DIGIT_OFFS "abcdefghijklmnopqrstuvwxyz_abcdefghijklmnopqrstuvwxyz_abcdefghijklmnopqrstuvwxyz_abcdefghi"
 
 namespace {
 
@@ -98,8 +101,27 @@ namespace {
         ee_size_t req_size{ 256 };
         const auto out{ std::make_unique<ee_ascii_char_t[]>(req_size) };
 
-        ASSERT_TRUE(ee_x86_format(mode, addr, &dis_out, out.get(), &req_size));
+        ASSERT_TRUE(ee_x86_format(mode, addr, &dis_out, nullptr, out.get(), &req_size));
         EXPECT_STREQ(out.get(), std::string(expected).c_str());
+    }
+
+    template<bool expect_is_address, bool use_64bit_address_range>
+    ee_bool_t check_symbolize_unknown_module_address(ee_uint64_t address, ee_bool_t is_address, ee_ascii_char_t* symbol, ee_size_t symbol_size) {
+
+        if ((expect_is_address != (bool)is_address) || !symbol || !symbol_size)
+            return EE_FALSE;
+
+        const ee_uint64_t module_base{ use_64bit_address_range ? 0x7F0000000000 : 0x7F0000 };
+        const ee_uint64_t module_end{ use_64bit_address_range ? 0x7FFFFFFFFFFF : 0x7FFFFF };
+
+        if (address < module_base || address >= module_end)
+            return EE_FALSE;
+
+        const auto offs{ address - module_base };
+        const auto symbol_str{ std::format("UnknownModule+{:X}h", offs) };
+
+        strncpy(symbol, symbol_str.c_str(), symbol_size - 1);
+        return EE_TRUE;
     }
 }
 
@@ -109,7 +131,16 @@ TEST(ee_fwrk_x86_format, format_with_nullptr_buf) {
     ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, REGULAR_INSTRUCTION.data(), REGULAR_INSTRUCTION.size(), &dis_out));
 
     ee_size_t req_size{};
-    EXPECT_FALSE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, nullptr, &req_size));
+    EXPECT_FALSE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, nullptr, nullptr, &req_size));
+}
+
+TEST(ee_fwrk_x86_format, format_with_nullptr_buf_but_correct_size) {
+
+    ee_x86_disasm_output dis_out{};
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, REGULAR_INSTRUCTION.data(), REGULAR_INSTRUCTION.size(), &dis_out));
+
+    ee_size_t req_size{ 256 };
+    EXPECT_FALSE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, nullptr, nullptr, &req_size));
 }
 
 TEST(ee_fwrk_x86_format, format_with_zero_len_buf) {
@@ -120,7 +151,7 @@ TEST(ee_fwrk_x86_format, format_with_zero_len_buf) {
     std::array<ee_ascii_char_t, 0> out{};
     ee_size_t req_size{};
 
-    EXPECT_FALSE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, out.data(), &req_size));
+    EXPECT_FALSE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, nullptr, out.data(), &req_size));
 }
 
 TEST(ee_fwrk_x86_format, format_with_too_small_buf) {
@@ -131,7 +162,7 @@ TEST(ee_fwrk_x86_format, format_with_too_small_buf) {
     std::array<ee_ascii_char_t, REGULAR_INSTRUCTION.size() / 2> out{};
     ee_size_t req_size{ out.size() };
 
-    EXPECT_FALSE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, out.data(), &req_size));
+    EXPECT_FALSE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, nullptr, out.data(), &req_size));
 }
 
 TEST(ee_fwrk_x86_format, format_with_barely_big_enough_buf) {
@@ -144,11 +175,11 @@ TEST(ee_fwrk_x86_format, format_with_buf_size_correction) {
     ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, REGULAR_INSTRUCTION.data(), REGULAR_INSTRUCTION.size(), &dis_out));
 
     ee_size_t req_size{};
-    EXPECT_FALSE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, nullptr, &req_size));
+    EXPECT_FALSE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, nullptr, nullptr, &req_size));
     EXPECT_EQ(req_size, REGULAR_INSTRUCTION_SV.size() + 1);
 
     const auto out{ std::make_unique<ee_ascii_char_t[]>(req_size) };
-    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, out.get(), &req_size));
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, nullptr, out.get(), &req_size));
     EXPECT_STREQ(out.get(), std::string(REGULAR_INSTRUCTION_SV).c_str());
 }
 
@@ -301,4 +332,119 @@ TEST(ee_fwrk_x86_format, format_with_xrelease_prefix) {
 
 TEST(ee_fwrk_x86_format, format_with_bnd_prefix) {
     expect_format(EE_X86_MODE_64, INSTRUCTION_WITH_BND_PREFIX, 0, INSTRUCTION_64_WITH_BND_PREFIX_SV);
+}
+
+TEST(ee_fwrk_x86_format, format_with_relative_address_symbolization) {
+
+    constexpr static auto inst{ make_array<ee_byte_t>(0xE8, 0x50, 0x00, 0x00, 0x00) };
+    ee_x86_disasm_output ast_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &ast_out));
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, 0x7F00AB, &ast_out, check_symbolize_unknown_module_address<true, false>, format, &format_size));
+    ASSERT_STREQ(format, "call UnknownModule+100h");
+}
+
+TEST(ee_fwrk_x86_format, format_with_relative_address_symbolization_max_len) {
+
+    constexpr static auto inst{ make_array<ee_byte_t>(0xE8, 0x75, 0x00, 0x00, 0x00) };
+    ee_x86_disasm_output ast_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &ast_out));
+
+    constexpr static auto symbolize_addr{ [](ee_uint64_t address, ee_bool_t is_address, ee_ascii_char_t* symbol, ee_size_t symbol_size) {
+
+        if (!is_address || !symbol || !symbol_size)
+            return EE_FALSE;
+
+        const ee_uint64_t module_base{ 0x7F0000 };
+        if (module_base > address)
+            return EE_FALSE;
+
+        const auto offs{ address - module_base };
+        const auto symbol_str{ std::format(MAX_LEN_MODULE_NAME_FOR_3_DIGIT_OFFS "+{:X}h", offs) };
+
+        strncpy(symbol, symbol_str.c_str(), symbol_size - 1);
+        return EE_TRUE;
+
+    } };
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, 0x7F00BB, &ast_out, symbolize_addr, format, &format_size));
+    ASSERT_STREQ(format, "call " MAX_LEN_MODULE_NAME_FOR_3_DIGIT_OFFS "+135h");
+}
+
+TEST(ee_fwrk_x86_format, format_with_imm32_symbolization) {
+
+    constexpr static auto inst{ make_array<ee_byte_t>(0xB8, 0xCD, 0xAB, 0x7F, 0x00) };
+    ee_x86_disasm_output ast_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &ast_out));
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, 0x7F00AB, &ast_out, check_symbolize_unknown_module_address<false, false>, format, &format_size));
+    ASSERT_STREQ(format, "mov eax, UnknownModule+ABCDh");
+}
+
+TEST(ee_fwrk_x86_format, format_with_imm32_failed_symbolization) {
+
+    constexpr static auto inst{ make_array<ee_byte_t>(0xB8, 0x80, 0x00, 0x80, 0x00) };
+    ee_x86_disasm_output ast_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &ast_out));
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, 0x7F00AB, &ast_out, check_symbolize_unknown_module_address<false, false>, format, &format_size));
+    ASSERT_STREQ(format, "mov eax, 800080h");
+}
+
+TEST(ee_fwrk_x86_format, format_with_imm64_symbolization) {
+
+    constexpr static auto inst{ make_array<ee_byte_t>(0x48, 0xB8, 0xBB, 0x00, 0x00, 0x00, 0xAA, 0x7F, 0x00, 0x00) };
+    ee_x86_disasm_output ast_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &ast_out));
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, 0x7F00000000AB, &ast_out, check_symbolize_unknown_module_address<false, true>, format, &format_size));
+    ASSERT_STREQ(format, "mov rax, UnknownModule+AA000000BBh");
+}
+
+TEST(ee_fwrk_x86_format, format_with_modrm_absolute_address_symbolization_32) {
+
+    constexpr static auto inst{ make_array<ee_byte_t>(0x8B, 0x05, 0xEE, 0x00, 0x7F, 0x00) };
+    ee_x86_disasm_output ast_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, inst.data(), inst.size(), &ast_out));
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, 0x7F00AB, &ast_out, check_symbolize_unknown_module_address<true, false>, format, &format_size));
+    ASSERT_STREQ(format, "mov eax, dword ptr[UnknownModule+EEh]");
+}
+
+TEST(ee_fwrk_x86_format, format_with_modrm_absolute_address_symbolization_64) {
+
+    constexpr static auto inst{ make_array<ee_byte_t>(0x48, 0x8B, 0x05, 0xFF, 0x00, 0x00, 0x00) };
+    ee_x86_disasm_output ast_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &ast_out));
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, 0x7F00000000AB, &ast_out, check_symbolize_unknown_module_address<true, true>, format, &format_size));
+    ASSERT_STREQ(format, "mov rax, qword ptr[UnknownModule+1B1h]");
 }

@@ -26,40 +26,40 @@ namespace {
     ) };
 
     constexpr auto EXPECTED_16{ make_array<ee_x86_disasm_output>(
-        create_x86_disasm_output_with_one_operand(1, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_PUSH, EE_X86_GPP_REGISTER_BP),
-        create_x86_disasm_output_with_one_operand(3, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_PUSH, x86_imm_opd{ 16, 0x0304 }),
-        create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, EE_X86_GPP_REGISTER_AL, x86_ptr_opd{ EE_X86_POINTER_BYTE, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_DI }),
-        create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_BP, EE_X86_GPP_REGISTER_DI }, EE_X86_GPP_REGISTER_AX),
-        create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_DI }, EE_X86_GPP_REGISTER_BP),
-        create_x86_disasm_output_with_one_operand(3, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_CALL, x86_rel_opd{ 16, 0x0304 }),
-        create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, EE_X86_GPP_REGISTER_AL, x86_ptr_opd{ EE_X86_POINTER_BYTE, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_DI }),
-        create_x86_disasm_output_with_two_operands(3, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_BP, EE_X86_GPP_REGISTER_DI }, EE_X86_GPP_REGISTER_EAX),
-        create_x86_disasm_output_with_one_operand(3, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 16, 0x0304 }),
-        create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, EE_X86_GPP_REGISTER_AL, x86_ptr_opd{ EE_X86_POINTER_BYTE, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_DI }),
+        create_x86_disasm_output_with_one_operand(1, {}, EE_X86_INSTRUCTION_PUSH, EE_X86_GPP_REGISTER_BP),
+        create_x86_disasm_output_with_one_operand(3, {}, EE_X86_INSTRUCTION_PUSH, x86_imm_opd{ 16, 0x0304 }),
+        create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD, EE_X86_GPP_REGISTER_AL, x86_ptr_opd{ EE_X86_POINTER_BYTE, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_DI }),
+        create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_BP, EE_X86_GPP_REGISTER_DI }, EE_X86_GPP_REGISTER_AX),
+        create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_DI }, EE_X86_GPP_REGISTER_BP),
+        create_x86_disasm_output_with_one_operand(3, {}, EE_X86_INSTRUCTION_CALL, x86_rel_opd{ 16, 0x0304 }),
+        create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD, EE_X86_GPP_REGISTER_AL, x86_ptr_opd{ EE_X86_POINTER_BYTE, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_DI }),
+        create_x86_disasm_output_with_two_operands(3, { EE_TRUE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_BP, EE_X86_GPP_REGISTER_DI }, EE_X86_GPP_REGISTER_EAX),
+        create_x86_disasm_output_with_one_operand(3, {}, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 16, 0x0304 }),
+        create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD, EE_X86_GPP_REGISTER_AL, x86_ptr_opd{ EE_X86_POINTER_BYTE, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_DI }),
         create_x86_disasm_output_with_one_operand(2, { EE_FALSE, EE_TRUE }, EE_X86_INSTRUCTION_DEC, EE_X86_GPP_REGISTER_AX),
-        create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_SI }, EE_X86_GPP_REGISTER_AX)
+        create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_SI }, EE_X86_GPP_REGISTER_AX)
     ) };
 
     constexpr auto EXPECTED_32{ make_array<ee_x86_disasm_output>(
-        create_x86_disasm_output_with_one_operand(1, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_PUSH, EE_X86_GPP_REGISTER_EBP),
-        create_x86_disasm_output_with_one_operand(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_PUSH, x86_imm_opd{ 32, 0x01020304 }),
-        create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_EBX }, EE_X86_GPP_REGISTER_EAX),
-        create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_ECX }, EE_X86_GPP_REGISTER_EBP),
-        create_x86_disasm_output_with_one_operand(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_CALL, x86_rel_opd{ 32, 0x01020304 }),
-        create_x86_disasm_output_with_two_operands(3, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_EBX }, EE_X86_GPP_REGISTER_AX),
-        create_x86_disasm_output_with_one_operand(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x01020304 }),
+        create_x86_disasm_output_with_one_operand(1, {}, EE_X86_INSTRUCTION_PUSH, EE_X86_GPP_REGISTER_EBP),
+        create_x86_disasm_output_with_one_operand(5, {}, EE_X86_INSTRUCTION_PUSH, x86_imm_opd{ 32, 0x01020304 }),
+        create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_EBX }, EE_X86_GPP_REGISTER_EAX),
+        create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_ECX }, EE_X86_GPP_REGISTER_EBP),
+        create_x86_disasm_output_with_one_operand(5, {}, EE_X86_INSTRUCTION_CALL, x86_rel_opd{ 32, 0x01020304 }),
+        create_x86_disasm_output_with_two_operands(3, { EE_TRUE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_EBX }, EE_X86_GPP_REGISTER_AX),
+        create_x86_disasm_output_with_one_operand(5, {}, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x01020304 }),
         create_x86_disasm_output_with_one_operand(2, { EE_FALSE, EE_TRUE }, EE_X86_INSTRUCTION_DEC, EE_X86_GPP_REGISTER_EAX),
-        create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_EAX }, EE_X86_GPP_REGISTER_EAX)
+        create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_EAX }, EE_X86_GPP_REGISTER_EAX)
     ) };
 
     constexpr auto EXPECTED_64{ make_array<ee_x86_disasm_output>(
-        create_x86_disasm_output_with_one_operand(1, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_PUSH, EE_X86_GPP_REGISTER_RBP),
-        create_x86_disasm_output_with_one_operand(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_PUSH, x86_imm_opd{ 32, 0x01020304 }),
-        create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_RBX }, EE_X86_GPP_REGISTER_EAX),
-        create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_RCX }, EE_X86_GPP_REGISTER_EBP),
-        create_x86_disasm_output_with_one_operand(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_CALL, x86_rel_opd{ 32, 0x01020304 }),
-        create_x86_disasm_output_with_two_operands(3, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_RBX }, EE_X86_GPP_REGISTER_AX),
-        create_x86_disasm_output_with_one_operand(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x01020304 }),
+        create_x86_disasm_output_with_one_operand(1, {}, EE_X86_INSTRUCTION_PUSH, EE_X86_GPP_REGISTER_RBP),
+        create_x86_disasm_output_with_one_operand(5, {}, EE_X86_INSTRUCTION_PUSH, x86_imm_opd{ 32, 0x01020304 }),
+        create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_RBX }, EE_X86_GPP_REGISTER_EAX),
+        create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_RCX }, EE_X86_GPP_REGISTER_EBP),
+        create_x86_disasm_output_with_one_operand(5, {}, EE_X86_INSTRUCTION_CALL, x86_rel_opd{ 32, 0x01020304 }),
+        create_x86_disasm_output_with_two_operands(3, { EE_TRUE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_RBX }, EE_X86_GPP_REGISTER_AX),
+        create_x86_disasm_output_with_one_operand(5, {}, EE_X86_INSTRUCTION_JMP, x86_rel_opd{ 32, 0x01020304 }),
         create_x86_disasm_output_with_two_operands(4, { EE_FALSE, EE_TRUE }, EE_X86_INSTRUCTION_ADD, x86_ptr_opd{ EE_X86_POINTER_QWORD, EE_X86_GPP_REGISTER_EAX }, EE_X86_GPP_REGISTER_RAX)
     ) };
 

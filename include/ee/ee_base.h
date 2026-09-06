@@ -67,6 +67,8 @@ typedef ee_uint32_t ee_size_t;
 #define EE_FALSE ((ee_bool_t)0)
 #define EE_TRUE ((ee_bool_t)1)
 
+#define EE_NULL ((void*)0)
+
 #define EE_INT8_MAX ((ee_int8_t)0x7f)
 #define EE_INT16_MAX ((ee_int16_t)0x7fff)
 #define EE_INT32_MAX ((ee_int32_t)0x7fffffff)
@@ -171,6 +173,7 @@ EE_STATIC_ASSERT(sizeof(ee_size_t) == sizeof(void*), ee_size_t_must_match_ptr_si
 
 EE_STATIC_ASSERT(EE_FALSE == 0, ee_false_must_be_0);
 EE_STATIC_ASSERT(EE_TRUE == 1, ee_true_must_be_1);
+EE_STATIC_ASSERT(EE_NULL == 0, ee_null_must_be_0);
 EE_STATIC_ASSERT(EE_INT8_MAX == 0x7f, ee_int8_max_must_be_0x7f);
 EE_STATIC_ASSERT(EE_INT16_MAX == 0x7fff, ee_int16_max_must_be_0x7fff);
 EE_STATIC_ASSERT(EE_INT32_MAX == 0x7fffffff, ee_int32_max_must_be_0x7fffffff);

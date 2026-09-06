@@ -19,7 +19,7 @@ namespace {
 
 TEST(ee_fwrk_x86, disasm_16_call_9Ah) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_CALL, x86_farptr_opd{ 0x3344, 16, 0x5566 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(5, {}, EE_X86_INSTRUCTION_CALL, x86_farptr_opd{ 0x3344, 16, 0x5566 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_16, CALL_11223344h.data(), CALL_11223344h.size(), &is));
@@ -28,7 +28,7 @@ TEST(ee_fwrk_x86, disasm_16_call_9Ah) {
 
 TEST(ee_fwrk_x86, disasm_16_call_66h_9Ah) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(8, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_CALL, x86_farptr_opd{ 0x1122, 32, 0x33445566 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(8, { EE_TRUE }, EE_X86_INSTRUCTION_CALL, x86_farptr_opd{ 0x1122, 32, 0x33445566 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_16, OSO_CALL_11223344h.data(), OSO_CALL_11223344h.size(), &is));
@@ -64,7 +64,7 @@ TEST(ee_fwrk_x86, disasm_16_call_67h_66h_9Ah) {
 
 TEST(ee_fwrk_x86, disasm_32_call_9Ah) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(7, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_CALL, x86_farptr_opd{ 0x1122, 32, 0x33445566 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(7, {}, EE_X86_INSTRUCTION_CALL, x86_farptr_opd{ 0x1122, 32, 0x33445566 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_32, CALL_11223344h.data(), CALL_11223344h.size(), &is));
@@ -73,7 +73,7 @@ TEST(ee_fwrk_x86, disasm_32_call_9Ah) {
 
 TEST(ee_fwrk_x86, disasm_32_call_66h_9Ah) {
     
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(6, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_CALL, x86_farptr_opd{ 0x3344, 16, 0x5566 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(6, { EE_TRUE }, EE_X86_INSTRUCTION_CALL, x86_farptr_opd{ 0x3344, 16, 0x5566 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_TRUE(ee_x86_disasm(EE_X86_MODE_32, OSO_CALL_11223344h.data(), OSO_CALL_11223344h.size(), &is));
@@ -109,7 +109,7 @@ TEST(ee_fwrk_x86, disasm_32_call_67h_66h_9Ah) {
 
 TEST(ee_fwrk_x86, disasm_64_call_9Ah) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(7, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_CALL, x86_farptr_opd{ 0x1122, 32, 0x33445566 }) };
+    static constexpr auto expected{ create_x86_disasm_output_with_one_operand(7, {}, EE_X86_INSTRUCTION_CALL, x86_farptr_opd{ 0x1122, 32, 0x33445566 }) };
 
     ee_x86_disasm_output is{};
     EXPECT_FALSE(ee_x86_disasm(EE_X86_MODE_64, CALL_11223344h.data(), CALL_11223344h.size(), &is));

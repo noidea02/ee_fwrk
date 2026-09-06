@@ -26,7 +26,7 @@ namespace {
 
 TEST(ee_fwrk_x86, disasm_16_add_01h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD,
         { EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_SI }, EE_X86_GPP_REGISTER_AX) };
 
     ee_x86_disasm_output out{};
@@ -36,7 +36,7 @@ TEST(ee_fwrk_x86, disasm_16_add_01h) {
 
 TEST(ee_fwrk_x86, disasm_16_add_66h_01h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(3, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_ADD,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(3, { EE_TRUE }, EE_X86_INSTRUCTION_ADD,
         { EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_SI }, EE_X86_GPP_REGISTER_EAX) };
 
     ee_x86_disasm_output out{};
@@ -76,7 +76,7 @@ TEST(ee_fwrk_x86, disasm_16_add_67h_66h_01h) {
 
 TEST(ee_fwrk_x86, disasm_32_add_01h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD,
         { EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_EAX }, EE_X86_GPP_REGISTER_EAX) };
 
     ee_x86_disasm_output out{};
@@ -86,7 +86,7 @@ TEST(ee_fwrk_x86, disasm_32_add_01h) {
 
 TEST(ee_fwrk_x86, disasm_32_add_66h_01h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(3, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_ADD,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(3, { EE_TRUE }, EE_X86_INSTRUCTION_ADD,
         { EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_EAX }, EE_X86_GPP_REGISTER_AX) };
 
     ee_x86_disasm_output out{};
@@ -126,7 +126,7 @@ TEST(ee_fwrk_x86, disasm_32_add_67h_66h_01h) {
 
 TEST(ee_fwrk_x86, disasm_64_add_01h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(2, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(2, {}, EE_X86_INSTRUCTION_ADD,
         { EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_RAX }, EE_X86_GPP_REGISTER_EAX) };
 
     ee_x86_disasm_output out{};
@@ -136,7 +136,7 @@ TEST(ee_fwrk_x86, disasm_64_add_01h) {
 
 TEST(ee_fwrk_x86, disasm_64_add_66h_01h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(3, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_ADD,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(3, { EE_TRUE }, EE_X86_INSTRUCTION_ADD,
         { EE_X86_POINTER_WORD, EE_X86_GPP_REGISTER_RAX }, EE_X86_GPP_REGISTER_AX) };
 
     ee_x86_disasm_output out{};
@@ -176,7 +176,7 @@ TEST(ee_fwrk_x86, disasm_64_add_67h_66h_01h) {
 
 TEST(ee_fwrk_x86, disasm_64_add_48h_01h_00h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(3, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADD,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(3, {}, EE_X86_INSTRUCTION_ADD,
         { EE_X86_POINTER_QWORD, EE_X86_GPP_REGISTER_RAX }, EE_X86_GPP_REGISTER_RAX) };
 
     ee_x86_disasm_output out{};
@@ -186,7 +186,7 @@ TEST(ee_fwrk_x86, disasm_64_add_48h_01h_00h) {
 
 TEST(ee_fwrk_x86, disasm_64_add_66h_48h_01h_00h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(4, { EE_TRUE, EE_FALSE }, EE_X86_INSTRUCTION_ADD,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(4, { EE_TRUE }, EE_X86_INSTRUCTION_ADD,
         { EE_X86_POINTER_QWORD, EE_X86_GPP_REGISTER_RAX }, EE_X86_GPP_REGISTER_RAX) };
 
     ee_x86_disasm_output out{};

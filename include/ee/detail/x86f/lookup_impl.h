@@ -32,7 +32,7 @@ static const ee_ascii_char_t* ee_prv_x86f_lookup_instruction_str(ee_x86_instruct
     case EE_X86_INSTRUCTION_AAM:              return EE_OBFUSCATED_SL("\xAD\xAD\x38", out, out_size); /* aam */
     case EE_X86_INSTRUCTION_AAS:              return EE_OBFUSCATED_SL("\xAD\xAD\x26", out, out_size); /* aas */
     case EE_X86_INSTRUCTION_ADC:              return EE_OBFUSCATED_SL("\xAD\xA8\x36", out, out_size); /* adc */
-    case EE_X86_INSTRUCTION_ADCX:              return EE_OBFUSCATED_SL("\xAD\xA8\x36\x2C", out, out_size); /* adcx */
+    case EE_X86_INSTRUCTION_ADCX:             return EE_OBFUSCATED_SL("\xAD\xA8\x36\x2C", out, out_size); /* adcx */
     case EE_X86_INSTRUCTION_ADD:              return EE_OBFUSCATED_SL("\xAD\xA8\x31", out, out_size); /* add */
     case EE_X86_INSTRUCTION_ADDPD:            return EE_OBFUSCATED_SL("\xAD\xA8\x31\x24\x8C", out, out_size); /* addpd */
     case EE_X86_INSTRUCTION_ADDPS:            return EE_OBFUSCATED_SL("\xAD\xA8\x31\x24\x9B", out, out_size); /* addps */
@@ -40,7 +40,7 @@ static const ee_ascii_char_t* ee_prv_x86f_lookup_instruction_str(ee_x86_instruct
     case EE_X86_INSTRUCTION_ADDSS:            return EE_OBFUSCATED_SL("\xAD\xA8\x31\x27\x9B", out, out_size); /* addss */
     case EE_X86_INSTRUCTION_ADDSUBPD:         return EE_OBFUSCATED_SL("\xAD\xA8\x31\x27\x9D\x66\x5A\x25", out, out_size); /* addsubpd */
     case EE_X86_INSTRUCTION_ADDSUBPS:         return EE_OBFUSCATED_SL("\xAD\xA8\x31\x27\x9D\x66\x5A\x32", out, out_size); /* addsubps */
-    case EE_X86_INSTRUCTION_ADOX:              return EE_OBFUSCATED_SL("\xAD\xA8\x3A\x2C", out, out_size); /* adox */
+    case EE_X86_INSTRUCTION_ADOX:             return EE_OBFUSCATED_SL("\xAD\xA8\x3A\x2C", out, out_size); /* adox */
     case EE_X86_INSTRUCTION_AESDEC:           return EE_OBFUSCATED_SL("\xAD\xA9\x26\x30\x8D\x67", out, out_size); /* aesdec */
     case EE_X86_INSTRUCTION_AESDECLAST:       return EE_OBFUSCATED_SL("\xAD\xA9\x26\x30\x8D\x67\x46\x20\x73\xFF", out, out_size); /* aesdeclast */
     case EE_X86_INSTRUCTION_AESENC:           return EE_OBFUSCATED_SL("\xAD\xA9\x26\x31\x86\x67", out, out_size); /* aesenc */

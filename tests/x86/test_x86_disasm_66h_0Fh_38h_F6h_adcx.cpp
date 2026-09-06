@@ -19,7 +19,7 @@ namespace {
 
 TEST(ee_fwrk_x86, disasm_16_adcx_66h_0Fh_38h_F6h_00h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADCX,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(5, {}, EE_X86_INSTRUCTION_ADCX,
         EE_X86_GPP_REGISTER_EAX, { EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_BX, EE_X86_GPP_REGISTER_SI }) };
 
     ee_x86_disasm_output is{};
@@ -49,7 +49,7 @@ TEST(ee_fwrk_x86, disasm_16_adcx_67h_68h_0Fh_38h_F6h_00h) {
 
 TEST(ee_fwrk_x86, disasm_32_adcx_66h_0Fh_38h_F6h_00h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADCX,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(5, {}, EE_X86_INSTRUCTION_ADCX,
         EE_X86_GPP_REGISTER_EAX, { EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_EAX }) };
 
     ee_x86_disasm_output is{};
@@ -79,7 +79,7 @@ TEST(ee_fwrk_x86, disasm_32_adcx_67h_68h_0Fh_38h_F6h_00h) {
 
 TEST(ee_fwrk_x86, disasm_64_adcx_66h_0Fh_38h_F6h_00h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(5, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADCX,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(5, {}, EE_X86_INSTRUCTION_ADCX,
         EE_X86_GPP_REGISTER_EAX, { EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_RAX }) };
 
     ee_x86_disasm_output is{};
@@ -89,7 +89,7 @@ TEST(ee_fwrk_x86, disasm_64_adcx_66h_0Fh_38h_F6h_00h) {
 
 TEST(ee_fwrk_x86, disasm_64_adcx_66h_48h_0Fh_38h_F6h_00h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(6, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADCX,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(6, {}, EE_X86_INSTRUCTION_ADCX,
         EE_X86_GPP_REGISTER_RAX, { EE_X86_POINTER_QWORD, EE_X86_GPP_REGISTER_RAX }) };
 
     ee_x86_disasm_output is{};
@@ -99,7 +99,7 @@ TEST(ee_fwrk_x86, disasm_64_adcx_66h_48h_0Fh_38h_F6h_00h) {
 
 TEST(ee_fwrk_x86, disasm_64_adcx_48h_68h_0Fh_38h_F6h_00h) {
 
-    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(6, { EE_FALSE, EE_FALSE }, EE_X86_INSTRUCTION_ADCX,
+    static constexpr auto expected{ create_x86_disasm_output_with_two_operands(6, {}, EE_X86_INSTRUCTION_ADCX,
         EE_X86_GPP_REGISTER_EAX, { EE_X86_POINTER_DWORD, EE_X86_GPP_REGISTER_RAX }) };
 
     ee_x86_disasm_output is{};
