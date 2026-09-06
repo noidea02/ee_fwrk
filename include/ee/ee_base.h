@@ -67,7 +67,7 @@ typedef ee_uint32_t ee_size_t;
 #define EE_FALSE ((ee_bool_t)0)
 #define EE_TRUE ((ee_bool_t)1)
 
-#define EE_NULL ((void*)0)
+#define EE_NULL 0
 
 #define EE_INT8_MAX ((ee_int8_t)0x7f)
 #define EE_INT16_MAX ((ee_int16_t)0x7fff)

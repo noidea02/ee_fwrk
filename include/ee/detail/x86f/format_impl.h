@@ -584,7 +584,7 @@ ee_bool_t ee_x86_format(ee_x86_mode_t mode, ee_uint64_t instruction_address, con
                 ee_ascii_char_t deob_buf[8] = { 0 };
                 const ee_size_t deob_buf_size = sizeof(deob_buf);
 
-                if (!ee_strapp(tmp_format, sizeof(tmp_format), EE_OBFUSCATED_SL("\xE0\xEC", deob_buf, deob_buf_size))) // ", "
+                if (!ee_strapp(tmp_format, sizeof(tmp_format), EE_OBFUSCATED_SL("\xE0\xEC", deob_buf, deob_buf_size))) /* ", " */
                     return EE_FALSE;
             }
         }
