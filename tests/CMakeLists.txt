@@ -7,7 +7,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-set(base_test_sources
+set(test_sources
     base/test_base_utility_macros.cpp
     base/test_base_memcmp.cpp
     base/test_base_memcpy.cpp
@@ -54,7 +54,7 @@ set(base_test_sources
 
 add_executable(ee_fwrk_test
     lib_impl.cpp
-    ${base_test_sources}
+    ${test_sources}
 )
 
 target_link_libraries(ee_fwrk_test PRIVATE ee_fwrk ee_fwrk_support gtest_main)
