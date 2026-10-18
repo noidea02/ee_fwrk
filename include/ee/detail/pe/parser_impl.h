@@ -349,6 +349,18 @@ static ee_bool_t ee_prv_pe_rii_state_lookup_fp_by_rva(ee_prv_pe_rii_state_t* sta
     return EE_FALSE;
 }
 
+static ee_pe_error_t ee_prv_pe_rii_state_collect_entry_point_info(ee_prv_pe_rii_state_t* state) {
+
+    ee_uint32_t fp = 0;
+    if(!ee_prv_pe_rii_state_lookup_fp_by_rva(state, state->opt_header.address_of_entry_point, &fp))
+        return EE_PE_MALFORMED_FILE;
+
+    state->entry_point_info.fp = fp;
+    state->entry_point_info.rva = state->opt_header.address_of_entry_point;
+
+    return EE_PE_SUCCESS;
+}
+
 static ee_int32_t ee_prv_pe_strlen_with_limit(const ee_ascii_char_t* str, ee_size_t str_size) {
 
     ee_size_t char_index = 0;
@@ -805,23 +817,29 @@ ee_pe_error_t ee_pe_read_image_info(const ee_pe_rii_callbacks_t* callbacks, ee_p
     /* 4) Collect section info. */
     ee_prv_pe_rii_state_collect_section_info(&state);
 
-    /* 5) Collect imported symbols. */
+    /* 5) Collection entry point info. */
+    error = ee_prv_pe_rii_state_collect_entry_point_info(&state);
+    if(error != EE_PE_SUCCESS)
+        goto cleanup;
+
+    /* 6) Collect imported symbols. */
     error = ee_prv_pe_rii_state_collect_imports(&state);
     if (error != EE_PE_SUCCESS)
         goto cleanup;
 
-    /* 6) Collect exported symbols. */
+    /* 7) Collect exported symbols. */
     error = ee_prv_pe_rii_state_collect_exports(&state);
     if (error != EE_PE_SUCCESS)
         goto cleanup;
 
-    /* 7) Write output. */
+    /* 8) Write output. */
     tmp_out = (ee_pe_image_info_t*)callbacks->calloc(1, sizeof(ee_pe_image_info_t));
     if (!tmp_out)
         return EE_PE_BAD_ALLOC;
 
     tmp_out->machine = ee_prv_pe_raw_machine_value_to_machine_type(state.coff_file_header.machine);
     tmp_out->image_base = state.opt_header.image_base;
+    tmp_out->entry_point_info = state.entry_point_info;
     tmp_out->imports = state.imports;
     tmp_out->num_imports = state.num_imports;
     tmp_out->exports = state.exports;

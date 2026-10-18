@@ -69,11 +69,19 @@ typedef struct {
 
 } ee_pe_import_info_t;
 
+typedef struct {
+
+    ee_uint32_t fp;
+    ee_uint32_t rva;
+
+} ee_pe_entry_point_info_t;
+
 struct ee_pe_image_info  {
 
     ee_int32_t reserved;
     ee_pe_machine_type_t machine;
     ee_uint64_t image_base;
+    ee_pe_entry_point_info_t entry_point_info;
     ee_pe_import_info_t* imports;
     ee_size_t num_imports;
     ee_pe_symbol_info_t* exports;

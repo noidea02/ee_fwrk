@@ -80,6 +80,7 @@ typedef struct {
     ee_pe_section_info_t iat_section_info;
     ee_pe_section_info_t edata_section_info;
     ee_pe_section_info_t text_section_info;
+    ee_pe_entry_point_info_t entry_point_info;
     ee_pe_import_info_t* imports;
     ee_size_t num_imports;
     ee_pe_symbol_info_t* exports;
