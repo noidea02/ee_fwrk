@@ -22,6 +22,13 @@ typedef ee_bool_t (*ee_x86_symbolize_address_t)(void* user_ctx, ee_uint64_t addr
 
 typedef struct {
 
+    void* user_ctx;
+    ee_x86_symbolize_address_t symbolize_address;
+
+} ee_x86_symbolization_params_t;
+
+typedef struct {
+
     ee_ascii_char_t prefixes[2][16];
     ee_size_t num_prefixes;
     ee_ascii_char_t instruction[24];
@@ -34,10 +41,10 @@ typedef struct {
 */
 
 ee_bool_t ee_x86_format(ee_x86_mode_t mode, ee_uint64_t instruction_address, const ee_x86_disasm_output_t* disasm_output,
-    void* opt_symbolisation_user_ctx, ee_x86_symbolize_address_t opt_symbolize_address, ee_ascii_char_t* format, ee_size_t* format_size);
+    const ee_x86_symbolization_params_t* opt_symbolization_params, ee_ascii_char_t* format, ee_size_t* format_size);
 
 ee_bool_t ee_x86_format_into_tokens(ee_x86_mode_t mode, ee_uint64_t instruction_address, const ee_x86_disasm_output_t* disasm_output,
-    void* opt_symbolisation_user_ctx, ee_x86_symbolize_address_t opt_symbolize_address, ee_x86_tokens_t* tokens);
+    const ee_x86_symbolization_params_t* opt_symbolization_params, ee_x86_tokens_t* tokens);
 
 /* Implementation
 */

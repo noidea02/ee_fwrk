@@ -17,8 +17,7 @@ typedef struct {
     ee_bool_t has_active_address_size_override;
     ee_uint64_t inst_addr;
     ee_uint64_t inst_size;
-    void* opt_symbolisation_user_ctx;
-    ee_x86_symbolize_address_t opt_symbolize_address;
+    const ee_x86_symbolization_params_t* opt_symbolization_params;
 
 } ee_prv_x86f_base_params_t;
 
@@ -156,10 +155,10 @@ static ee_bool_t ee_prv_x86f_format_relative_address_operand(const ee_prv_x86f_b
     }
 
     /* Check for symbolized address. */
-    if (base_params->opt_symbolize_address) {
+    if (base_params->opt_symbolization_params) {
 
         ee_ascii_char_t symbolized_addr[EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN] = { 0 };
-        if (base_params->opt_symbolize_address(base_params->opt_symbolisation_user_ctx, final_addr, EE_TRUE, symbolized_addr, sizeof(symbolized_addr))) {
+        if (base_params->opt_symbolization_params->symbolize_address(base_params->opt_symbolization_params->user_ctx, final_addr, EE_TRUE, symbolized_addr, sizeof(symbolized_addr))) {
 
             ee_strncpy(output, symbolized_addr, output_buf_size);
             return EE_TRUE;
@@ -318,7 +317,7 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand_index(const ee_x86_pointer_o
     return EE_TRUE;
 }
 
-static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_static_address, void* opt_symbolisation_user_ctx, ee_x86_symbolize_address_t opt_symbolize_address, ee_size_t disp_num_bits, ee_int64_t disp, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_static_address, const ee_x86_symbolization_params_t* opt_symbolization_params, ee_size_t disp_num_bits, ee_int64_t disp, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_int64_t actual_disp = 0;
     ee_size_t desired_disp_str_len = 0;
@@ -337,10 +336,10 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_st
         actual_disp = disp;
 
         /* Check for symbolized address. */
-        if (opt_symbolize_address) {
+        if (opt_symbolization_params) {
 
             ee_ascii_char_t symbolized_addr[EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN] = { 0 };
-            if (opt_symbolize_address(opt_symbolisation_user_ctx, (ee_uint64_t)actual_disp, EE_TRUE, symbolized_addr, sizeof(symbolized_addr)))
+            if (opt_symbolization_params->symbolize_address(opt_symbolization_params->user_ctx, (ee_uint64_t)actual_disp, EE_TRUE, symbolized_addr, sizeof(symbolized_addr)))
                 return ee_strapp(output, output_buf_size, symbolized_addr);
         }
 
@@ -477,8 +476,7 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand(const ee_prv_x86f_base_param
         /* Operator (+ or -) can only reliably be determined by the formatting function, hence we cannot append it beforehand. */
         if (!ee_prv_x86f_format_pointer_operand_displacement(
             !has_base,
-            base_params->opt_symbolisation_user_ctx,
-            base_params->opt_symbolize_address,
+            base_params->opt_symbolization_params,
             actual_disp_num_bits,
             actual_disp,
             output,
@@ -505,10 +503,10 @@ static ee_bool_t ee_prv_x86f_format_immediate_value_operand(const ee_prv_x86f_ba
     ee_size_t desired_str_len = 0;
 
     /* Check for symbolized address. */
-    if (base_params->opt_symbolize_address && (operand->value_num_bits == 32 || operand->value_num_bits == 64)) {
+    if (base_params->opt_symbolization_params && (operand->value_num_bits == 32 || operand->value_num_bits == 64)) {
 
         ee_ascii_char_t symbolized_addr[EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN] = { 0 };
-        if (base_params->opt_symbolize_address(base_params->opt_symbolisation_user_ctx, (ee_uint64_t)operand->value, EE_FALSE, symbolized_addr, sizeof(symbolized_addr))) {
+        if (base_params->opt_symbolization_params->symbolize_address(base_params->opt_symbolization_params->user_ctx, (ee_uint64_t)operand->value, EE_FALSE, symbolized_addr, sizeof(symbolized_addr))) {
 
             ee_strncpy(output, symbolized_addr, output_buf_size);
             return EE_TRUE;
@@ -536,7 +534,7 @@ static ee_bool_t ee_prv_x86f_format_immediate_value_operand(const ee_prv_x86f_ba
     return ee_strapp(output, output_buf_size, padded_imm_val_str) && ee_strapp(output, output_buf_size, EE_SL("h"));
 }
 
-ee_bool_t ee_x86_format(ee_x86_mode_t mode, ee_uint64_t instruction_address, const ee_x86_disasm_output_t* disasm_output, void* opt_symbolisation_user_ctx, ee_x86_symbolize_address_t opt_symbolize_address, ee_ascii_char_t* format, ee_size_t* format_size) {
+ee_bool_t ee_x86_format(ee_x86_mode_t mode, ee_uint64_t instruction_address, const ee_x86_disasm_output_t* disasm_output, const ee_x86_symbolization_params_t* opt_symbolization_params, ee_ascii_char_t* format, ee_size_t* format_size) {
 
     ee_x86_tokens_t tokens = { 0 };
     ee_ascii_char_t tmp_format[sizeof(tokens) + 1] = { 0 };
@@ -548,7 +546,7 @@ ee_bool_t ee_x86_format(ee_x86_mode_t mode, ee_uint64_t instruction_address, con
 
     available_format_size = *format_size;
 
-    if (!ee_x86_format_into_tokens(mode, instruction_address, disasm_output, opt_symbolisation_user_ctx, opt_symbolize_address, &tokens))
+    if (!ee_x86_format_into_tokens(mode, instruction_address, disasm_output, opt_symbolization_params, &tokens))
         return EE_FALSE;
 
     if (tokens.num_prefixes > EE_GET_ARRAY_LEN(tokens.prefixes) || tokens.num_operands > EE_GET_ARRAY_LEN(tokens.operands))
@@ -604,7 +602,7 @@ ee_bool_t ee_x86_format(ee_x86_mode_t mode, ee_uint64_t instruction_address, con
     return EE_TRUE;
 }
 
-ee_bool_t ee_x86_format_into_tokens(ee_x86_mode_t mode, ee_uint64_t instruction_address, const ee_x86_disasm_output_t* disasm_output, void* opt_symbolisation_user_ctx, ee_x86_symbolize_address_t opt_symbolize_address, ee_x86_tokens_t* tokens) {
+ee_bool_t ee_x86_format_into_tokens(ee_x86_mode_t mode, ee_uint64_t instruction_address, const ee_x86_disasm_output_t* disasm_output, const ee_x86_symbolization_params_t* opt_symbolization_params, ee_x86_tokens_t* tokens) {
     
     ee_prv_x86f_base_params_t base_params = { 0 };
     ee_x86_tokens_t tmp_tokens = { 0 };
@@ -626,8 +624,7 @@ ee_bool_t ee_x86_format_into_tokens(ee_x86_mode_t mode, ee_uint64_t instruction_
     base_params.has_active_address_size_override = disasm_output->prefixes.address_size_override;
     base_params.inst_addr = instruction_address;
     base_params.inst_size = disasm_output->num_instruction_bytes;
-    base_params.opt_symbolisation_user_ctx = opt_symbolisation_user_ctx;
-    base_params.opt_symbolize_address = opt_symbolize_address;
+    base_params.opt_symbolization_params = opt_symbolization_params;
 
     /* 1) Process prefixes (if any). */
     if (!ee_prv_x86f_format_printable_prefixes(disasm_output->prefixes.printable_prefixes, disasm_output->prefixes.num_printable_prefixes, &tmp_tokens))
