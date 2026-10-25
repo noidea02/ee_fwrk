@@ -480,6 +480,8 @@ static const ee_ascii_char_t* ee_prv_x86f_lookup_instruction_str(ee_x86_instruct
     case EE_X86_INSTRUCTION_PINSRW:           return EE_OBFUSCATED_SL("\xBC\xA5\x3B\x27\x9A\x73", out, out_size); /* pinsrw */
     case EE_X86_INSTRUCTION_PMADDUBSW:        return EE_OBFUSCATED_SL("\xBC\xA1\x34\x30\x8C\x71\x48\x32\x77", out, out_size); /* pmaddubsw */
     case EE_X86_INSTRUCTION_PMADDWD:          return EE_OBFUSCATED_SL("\xBC\xA1\x34\x30\x8C\x73\x4E", out, out_size); /* pmaddwd */
+    case EE_X86_INSTRUCTION_PMAXSB:           return EE_OBFUSCATED_SL("\xBC\xA1\x34\x2C\x9B\x66", out, out_size); /* pmaxsb */
+    case EE_X86_INSTRUCTION_PMAXSD:           return EE_OBFUSCATED_SL("\xBC\xA1\x34\x2C\x9B\x60", out, out_size); /* pmaxsd */
     case EE_X86_INSTRUCTION_PMAXSW:           return EE_OBFUSCATED_SL("\xBC\xA1\x34\x2C\x9B\x73", out, out_size); /* pmaxsw */
     case EE_X86_INSTRUCTION_PMAXUB:           return EE_OBFUSCATED_SL("\xBC\xA1\x34\x2C\x9D\x66", out, out_size); /* pmaxub */
     case EE_X86_INSTRUCTION_PMAXUD:           return EE_OBFUSCATED_SL("\xBC\xA1\x34\x2C\x9D\x60", out, out_size); /* pmaxud */
