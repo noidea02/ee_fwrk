@@ -147,11 +147,15 @@ static ee_bool_t ee_prv_x86f_format_relative_address_operand(const ee_prv_x86f_b
     ee_size_t desired_str_len = 0;
     ee_uint64_t final_addr = base_params->inst_addr + base_params->inst_size + (ee_uint64_t)((ee_int64_t)operand->offset);
 
-    /* Truncate final address down to 16 bits if necessary. */
+    /* Truncate final address if necessary. */
     if ((base_params->active_mode == EE_X86_MODE_16 && !base_params->has_active_operand_size_override)
         || (base_params->active_mode == EE_X86_MODE_32 && base_params->has_active_operand_size_override)) {
         
-        final_addr &= (ee_uint64_t)0xffff;
+        final_addr &= (ee_uint64_t)EE_UINT16_MAX;
+    }
+    else if(base_params->active_mode == EE_X86_MODE_32 && !base_params->has_active_operand_size_override) {
+
+        final_addr &= (ee_uint64_t)EE_UINT32_MAX;
     }
 
     /* Check for symbolized address. */
@@ -317,7 +321,7 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand_index(const ee_x86_pointer_o
     return EE_TRUE;
 }
 
-static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_static_address, const ee_x86_symbolization_params_t* opt_symbolization_params, ee_size_t disp_num_bits, ee_int64_t disp, ee_ascii_char_t* output, ee_size_t output_buf_size) {
+static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(const ee_prv_x86f_base_params_t* base_params, ee_bool_t is_static_address, ee_size_t disp_num_bits, ee_int64_t disp, ee_ascii_char_t* output, ee_size_t output_buf_size) {
 
     ee_int64_t actual_disp = 0;
     ee_size_t desired_disp_str_len = 0;
@@ -336,12 +340,19 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_st
         actual_disp = disp;
 
         /* Check for symbolized address. */
-        if (opt_symbolization_params) {
+        if (base_params->opt_symbolization_params) {
 
             ee_ascii_char_t symbolized_addr[EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN] = { 0 };
-            const ee_uint64_t actual_addr = ((ee_uint64_t)actual_disp) & (disp_num_bits == 32 ? EE_UINT32_MAX : EE_UINT64_MAX);
+            ee_uint64_t actual_addr = (ee_uint64_t)actual_disp;
 
-            if (opt_symbolization_params->symbolize_address(opt_symbolization_params->user_ctx, actual_addr, EE_TRUE, symbolized_addr, sizeof(symbolized_addr)))
+            if(base_params->active_mode == EE_X86_MODE_16 || (base_params->active_mode == EE_X86_MODE_32 && base_params->has_active_address_size_override)) {
+                actual_addr &= EE_UINT16_MAX;
+            }
+            else if(base_params->active_mode == EE_X86_MODE_32 || (base_params->active_mode == EE_X86_MODE_64 && base_params->has_active_address_size_override)) {
+                actual_addr &= EE_UINT32_MAX;
+            }
+
+            if (base_params->opt_symbolization_params->symbolize_address(base_params->opt_symbolization_params->user_ctx, actual_addr, EE_TRUE, symbolized_addr, sizeof(symbolized_addr)))
                 return ee_strapp(output, output_buf_size, symbolized_addr);
         }
 
@@ -431,7 +442,7 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand(const ee_prv_x86f_base_param
         actual_disp = base_params->inst_addr + base_params->inst_size + (ee_uint64_t)operand->displacement;
         if (base_params->has_active_address_size_override) {
 
-            actual_disp &= (ee_uint64_t)0xffffffff;
+            actual_disp &= (ee_uint64_t)EE_UINT32_MAX;
             actual_disp_num_bits = 32;
         }
         else {
@@ -477,8 +488,8 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand(const ee_prv_x86f_base_param
 
         /* Operator (+ or -) can only reliably be determined by the formatting function, hence we cannot append it beforehand. */
         if (!ee_prv_x86f_format_pointer_operand_displacement(
+            base_params,
             !has_base,
-            base_params->opt_symbolization_params,
             actual_disp_num_bits,
             actual_disp,
             output,
