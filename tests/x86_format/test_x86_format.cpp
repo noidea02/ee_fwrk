@@ -17,6 +17,13 @@ using namespace ee_supp;
 
 namespace {
 
+    struct symbolization_test_context {
+
+        bool success;
+        bool expected_is_address;
+        ee_uint64_t expected_address;
+    };
+
     constexpr auto REGULAR_INSTRUCTION{ make_array<ee_byte_t>(0x00, 0x00) };
     constexpr std::string_view REGULAR_INSTRUCTION_SV("add byte ptr[eax], al");
 
@@ -122,6 +129,18 @@ namespace {
 
         strncpy(symbol, symbol_str.c_str(), symbol_size - 1);
         return EE_TRUE;
+    }
+
+    ee_bool_t symbolize_address_with_test_context(void* user_ctx, ee_uint64_t address, ee_bool_t is_address, ee_ascii_char_t* symbol, ee_size_t symbol_size) {
+
+        const auto test_ctx{ (symbolization_test_context*)user_ctx };
+        test_ctx->success = false;
+
+        if(test_ctx->expected_is_address != (bool)is_address)
+            return EE_FALSE;
+
+        test_ctx->success = test_ctx->expected_address == address;
+        return EE_FALSE;
     }
 }
 
@@ -495,4 +514,346 @@ TEST(ee_fwrk_x86_format, format_with_symbolisation_user_ctx) {
 
     ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, 0, &ast_out, &symbolization_params, format, &format_size));
     ASSERT_EQ(user_ctx, expected_user_ctx_value);
+}
+
+TEST(ee_fwrk_x86_format, format_with_imm32_symbolization_32) {
+
+    constexpr static auto inst{ make_array<ee_byte_t>(0xB8, 0x00, 0x10, 0x00, 0xA0) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_FALSE;
+    symbolization_ctx.expected_address = 0xA0001000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, 0, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_imm32_symbolization_64) {
+
+    constexpr static auto inst{ make_array<ee_byte_t>(0xB8, 0x00, 0x10, 0x00, 0xA0) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_FALSE;
+    symbolization_ctx.expected_address = 0xA0001000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, 0, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_imm64_symbolization_64) {
+
+    constexpr static auto inst{ make_array<ee_byte_t>(0x48, 0xB8, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x8F) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_FALSE;
+    symbolization_ctx.expected_address = 0x8F00000010000000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, 0, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_positive_rel8_symbolization_32) {
+
+    constexpr ee_uint64_t inst_addr{ 0x8000 };
+    constexpr static auto inst{ make_array<ee_byte_t>(0xEB, 0x7E) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0x8080;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_negative_rel8_symbolization_32) {
+
+    constexpr ee_uint64_t inst_addr{ 0x803E };
+    constexpr static auto inst{ make_array<ee_byte_t>(0xEB, 0xC0) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0x8000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_positive_rel16_symbolization_32) {
+
+    constexpr ee_uint64_t inst_addr{ 0x800000 };
+    constexpr static auto inst{ make_array<ee_byte_t>(0x66, 0xE9, 0xFC, 0x3F) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0x4000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_negative_rel16_symbolization_32) {
+
+    constexpr ee_uint64_t inst_addr{ 0x807FFC };
+    constexpr static auto inst{ make_array<ee_byte_t>(0x66, 0xE9, 0x00, 0xC0) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0x4000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_positive_rel32_symbolization_32) {
+
+    constexpr ee_uint64_t inst_addr{ 0x80000000 };
+    constexpr static auto inst{ make_array<ee_byte_t>(0xE9, 0xFB, 0xFF, 0xFF, 0x1F) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0xA0000000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_negative_rel32_symbolization_32) {
+
+    constexpr ee_uint64_t inst_addr{ 0x9FFFFFFB };
+    constexpr static auto inst{ make_array<ee_byte_t>(0xE9, 0x00, 0x00, 0x00, 0xB0) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0x50000000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_positive_rel32_symbolization_64) {
+
+    constexpr ee_uint64_t inst_addr{ 0x8080000000 };
+    constexpr static auto inst{ make_array<ee_byte_t>(0xE9, 0xFB, 0xFF, 0xFF, 0x1F) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0x80A0000000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_negative_rel32_symbolization_64) {
+
+    constexpr ee_uint64_t inst_addr{ 0x809FFFFFFB };
+    constexpr static auto inst{ make_array<ee_byte_t>(0xE9, 0x00, 0x00, 0x00, 0xB0) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0x8050000000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_modrm_positive_absolute_address_symbolization_32) {
+
+    constexpr ee_uint64_t inst_addr{ 0x3A000000 };
+    constexpr static auto inst{ make_array<ee_byte_t>(0x8B, 0x05, 0x00, 0x00, 0xFF, 0x7F) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0x7FFF0000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_modrm_negative_absolute_address_symbolization_32) {
+
+    constexpr ee_uint64_t inst_addr{ 0x10000000 };
+    constexpr static auto inst{ make_array<ee_byte_t>(0x8B, 0x05, 0x00, 0x00, 0xFF, 0x8F) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_32, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0x8FFF0000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_32, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_modrm_positive_rip_relative_address_symbolization_64) {
+
+    constexpr ee_uint64_t inst_addr{ 0x8F00000000 };
+    constexpr static auto inst{ make_array<ee_byte_t>(0x8B, 0x05, 0xFA, 0xFF, 0xFF, 0x7F) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0x8F80000000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
+}
+
+TEST(ee_fwrk_x86_format, format_with_modrm_negative_rip_relative_address_symbolization_64) {
+
+    constexpr ee_uint64_t inst_addr{ 0x8F9FFFFFFA };
+    constexpr static auto inst{ make_array<ee_byte_t>(0x8B, 0x05, 0x00, 0x00, 0x00, 0xB0) };
+    ee_x86_disasm_output dis_out{};
+
+    ASSERT_TRUE(ee_x86_disasm(EE_X86_MODE_64, inst.data(), inst.size(), &dis_out));
+
+    symbolization_test_context symbolization_ctx{};
+    symbolization_ctx.expected_is_address = EE_TRUE;
+    symbolization_ctx.expected_address = 0x8F50000000;
+
+    ee_x86_symbolization_params_t symbolization_params{};
+    symbolization_params.user_ctx = &symbolization_ctx;
+    symbolization_params.symbolize_address = symbolize_address_with_test_context;
+
+    ee_ascii_char_t format[128]{};
+    ee_size_t format_size{ sizeof(format) };
+
+    ASSERT_TRUE(ee_x86_format(EE_X86_MODE_64, inst_addr, &dis_out, &symbolization_params, format, &format_size));
+    ASSERT_TRUE(symbolization_ctx.success);
 }

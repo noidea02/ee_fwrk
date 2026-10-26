@@ -5,7 +5,7 @@ Header-only C library for assisting with x86 binary analysis. Provides functions
 - x86 instruction decoding & formatting ([ee_x86](#ee_x86)).
 - PE image file parsing ([ee_pe](#ee_pe)).
 
-The library adheres to C89 language rules and does not have any external dependencies (CRT-less).
+The library adheres to C89 language rules and does not have any external dependencies (CRT-less). However, it does require an LLP64 or LP64 environment.
 
 &nbsp;
 

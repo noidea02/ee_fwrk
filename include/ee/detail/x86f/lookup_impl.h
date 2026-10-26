@@ -304,6 +304,7 @@ static const ee_ascii_char_t* ee_prv_x86f_lookup_instruction_str(ee_x86_instruct
     case EE_X86_INSTRUCTION_INS:              return EE_OBFUSCATED_SL("\xA5\xA2\x26", out, out_size); /* ins */
     case EE_X86_INSTRUCTION_INSERTPS:         return EE_OBFUSCATED_SL("\xA5\xA2\x26\x31\x9A\x70\x5A\x32", out, out_size); /* insertps */
     case EE_X86_INSTRUCTION_INT:              return EE_OBFUSCATED_SL("\xA5\xA2\x21", out, out_size); /* int */
+    case EE_X86_INSTRUCTION_INT1:             return EE_OBFUSCATED_SL("\xA5\xA2\x21\x65", out, out_size); /* int1 */
     case EE_X86_INSTRUCTION_INT3:             return EE_OBFUSCATED_SL("\xA5\xA2\x21\x67", out, out_size); /* int3 */
     case EE_X86_INSTRUCTION_INTO:             return EE_OBFUSCATED_SL("\xA5\xA2\x21\x3B", out, out_size); /* into */
     case EE_X86_INSTRUCTION_INVD:             return EE_OBFUSCATED_SL("\xA5\xA2\x23\x30", out, out_size); /* invd */
@@ -520,11 +521,13 @@ static const ee_ascii_char_t* ee_prv_x86f_lookup_instruction_str(ee_x86_instruct
     case EE_X86_INSTRUCTION_POPFD:            return EE_OBFUSCATED_SL("\xBC\xA3\x25\x32\x8C", out, out_size); /* popfd */
     case EE_X86_INSTRUCTION_POPFQ:            return EE_OBFUSCATED_SL("\xBC\xA3\x25\x32\x99", out, out_size); /* popfq */
     case EE_X86_INSTRUCTION_POR:              return EE_OBFUSCATED_SL("\xBC\xA3\x27", out, out_size); /* por */
+    case EE_X86_INSTRUCTION_PREFETCH:         return EE_OBFUSCATED_SL("\xBC\xBE\x30\x32\x8D\x70\x49\x29", out, out_size); /* prefetch */
     case EE_X86_INSTRUCTION_PREFETCHNTA:      return EE_OBFUSCATED_SL("\xBC\xBE\x30\x32\x8D\x70\x49\x29\x6E\xFF\x61", out, out_size); /* prefetchnta */
     case EE_X86_INSTRUCTION_PREFETCHT0:       return EE_OBFUSCATED_SL("\xBC\xBE\x30\x32\x8D\x70\x49\x29\x74\xBB", out, out_size); /* prefetcht0 */
     case EE_X86_INSTRUCTION_PREFETCHT1:       return EE_OBFUSCATED_SL("\xBC\xBE\x30\x32\x8D\x70\x49\x29\x74\xBA", out, out_size); /* prefetcht1 */
     case EE_X86_INSTRUCTION_PREFETCHT2:       return EE_OBFUSCATED_SL("\xBC\xBE\x30\x32\x8D\x70\x49\x29\x74\xB9", out, out_size); /* prefetcht2 */
     case EE_X86_INSTRUCTION_PREFETCHW:        return EE_OBFUSCATED_SL("\xBC\xBE\x30\x32\x8D\x70\x49\x29\x77", out, out_size); /* prefetchw */
+    case EE_X86_INSTRUCTION_PREFETCHWT1:      return EE_OBFUSCATED_SL("\xBC\xBE\x30\x32\x8D\x70\x49\x29\x77\xFF\x31", out, out_size); /* prefetchwt1 */
     case EE_X86_INSTRUCTION_PSADBW:           return EE_OBFUSCATED_SL("\xBC\xBF\x34\x30\x8A\x73", out, out_size); /* psadbw */
     case EE_X86_INSTRUCTION_PSHUFB:           return EE_OBFUSCATED_SL("\xBC\xBF\x3D\x21\x8E\x66", out, out_size); /* pshufb */
     case EE_X86_INSTRUCTION_PSHUFD:           return EE_OBFUSCATED_SL("\xBC\xBF\x3D\x21\x8E\x60", out, out_size); /* pshufd */
@@ -606,6 +609,7 @@ static const ee_ascii_char_t* ee_prv_x86f_lookup_instruction_str(ee_x86_instruct
     case EE_X86_INSTRUCTION_RSQRTPS:          return EE_OBFUSCATED_SL("\xBE\xBF\x24\x26\x9C\x74\x59", out, out_size); /* rsqrtps */
     case EE_X86_INSTRUCTION_RSQRTSS:          return EE_OBFUSCATED_SL("\xBE\xBF\x24\x26\x9C\x77\x59", out, out_size); /* rsqrtss */
     case EE_X86_INSTRUCTION_SAHF:             return EE_OBFUSCATED_SL("\xBF\xAD\x3D\x32", out, out_size); /* sahf */
+    case EE_X86_INSTRUCTION_SALC:             return EE_OBFUSCATED_SL("\xBF\xAD\x39\x37", out, out_size); /* salc */
     case EE_X86_INSTRUCTION_SAR:              return EE_OBFUSCATED_SL("\xBF\xAD\x27", out, out_size); /* sar */
     case EE_X86_INSTRUCTION_SARX:             return EE_OBFUSCATED_SL("\xBF\xAD\x27\x2C", out, out_size); /* sarx */
     case EE_X86_INSTRUCTION_SBB:              return EE_OBFUSCATED_SL("\xBF\xAE\x37", out, out_size); /* sbb */
@@ -683,6 +687,8 @@ static const ee_ascii_char_t* ee_prv_x86f_lookup_instruction_str(ee_x86_instruct
     case EE_X86_INSTRUCTION_TZCNT:            return EE_OBFUSCATED_SL("\xB8\xB6\x36\x3A\x9C", out, out_size); /* tzcnt */
     case EE_X86_INSTRUCTION_UCOMISD:          return EE_OBFUSCATED_SL("\xB9\xAF\x3A\x39\x81\x77\x4E", out, out_size); /* ucomisd */
     case EE_X86_INSTRUCTION_UCOMISS:          return EE_OBFUSCATED_SL("\xB9\xAF\x3A\x39\x81\x77\x59", out, out_size); /* ucomiss */
+    case EE_X86_INSTRUCTION_UD0:              return EE_OBFUSCATED_SL("\xB9\xA8\x65", out, out_size); /* ud0 */
+    case EE_X86_INSTRUCTION_UD1:              return EE_OBFUSCATED_SL("\xB9\xA8\x64", out, out_size); /* ud1 */
     case EE_X86_INSTRUCTION_UD2:              return EE_OBFUSCATED_SL("\xB9\xA8\x67", out, out_size); /* ud2 */
     case EE_X86_INSTRUCTION_UIRET:            return EE_OBFUSCATED_SL("\xB9\xA5\x27\x31\x9C", out, out_size); /* uiret */
     case EE_X86_INSTRUCTION_UMONITOR:         return EE_OBFUSCATED_SL("\xB9\xA1\x3A\x3A\x81\x70\x45\x33", out, out_size); /* umonitor */

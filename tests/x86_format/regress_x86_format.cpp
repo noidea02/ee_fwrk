@@ -30,6 +30,9 @@ namespace {
     }
 }
 
+/* OLD sorted regression tests.
+*/
+
 /* 32-bit regression tests
 */
 
@@ -716,6 +719,553 @@ TEST(ee_fwrk_x86_format_regression, mode64_F3h_49h_90h) {
 
     constexpr auto in{ make_array<ee_byte_t>(0xf3, 0x49, 0x90) };
     constexpr std::string_view expected("pause");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+/* NEW unsorted regression tests.
+*/
+
+/* INT1 regression tests
+*/
+
+TEST(ee_fwrk_x86_format_regression, mode32_F1h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0xf1) };
+    constexpr std::string_view expected("int1");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_66h_F1h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x66, 0xf1) };
+    constexpr std::string_view expected("int1");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_F1h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0xf1) };
+    constexpr std::string_view expected("int1");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_66h_F1h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x66, 0xf1) };
+    constexpr std::string_view expected("int1");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+/* UD0 regression tests
+*/
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_FFh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xff, 0x00) };
+    constexpr std::string_view expected("ud0 eax, dword ptr[eax]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_FFh_BFh_44h_33h_22h_11h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xff, 0xBF, 0x44, 0x33, 0x22, 0x11) };
+    constexpr std::string_view expected("ud0 edi, dword ptr[edi+11223344h]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_FFh_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xff, 0xc0) };
+    constexpr std::string_view expected("ud0 eax, eax");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_FFh_FFh) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xff, 0xff) };
+    constexpr std::string_view expected("ud0 edi, edi");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_66h_0Fh_FFh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x66, 0x0f, 0xff, 0x00) };
+    constexpr std::string_view expected("ud0 ax, word ptr[eax]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_67h_0Fh_FFh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x67, 0x0f, 0xff, 0x00) };
+    constexpr std::string_view expected("ud0 eax, dword ptr[bx+si]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_66h_67h_0Fh_FFh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x66, 0x67, 0x0f, 0xff, 0x00) };
+    constexpr std::string_view expected("ud0 ax, word ptr[bx+si]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_FFh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xff, 0x00) };
+    constexpr std::string_view expected("ud0 eax, dword ptr[rax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_FFh_BFh_44h_33h_22h_11h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xff, 0xBF, 0x44, 0x33, 0x22, 0x11) };
+    constexpr std::string_view expected("ud0 edi, dword ptr[rdi+11223344h]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_FFh_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xff, 0xc0) };
+    constexpr std::string_view expected("ud0 eax, eax");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_FFh_FFh) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xff, 0xff) };
+    constexpr std::string_view expected("ud0 edi, edi");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_48h_0Fh_FFh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x48, 0x0f, 0xff, 0x00) };
+    constexpr std::string_view expected("ud0 rax, qword ptr[rax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_66h_0Fh_FFh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x66, 0x0f, 0xff, 0x00) };
+    constexpr std::string_view expected("ud0 ax, word ptr[rax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_67h_0Fh_FFh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x67, 0x0f, 0xff, 0x00) };
+    constexpr std::string_view expected("ud0 eax, dword ptr[eax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_66h_67h_0Fh_FFh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x66, 0x67, 0x0f, 0xff, 0x00) };
+    constexpr std::string_view expected("ud0 ax, word ptr[eax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+/* UD1 regression tests
+*/
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_B9h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xb9, 0x00) };
+    constexpr std::string_view expected("ud1 eax, dword ptr[eax]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_B9h_BFh_44h_33h_22h_11h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xb9, 0xBF, 0x44, 0x33, 0x22, 0x11) };
+    constexpr std::string_view expected("ud1 edi, dword ptr[edi+11223344h]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_B9h_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xb9, 0xc0) };
+    constexpr std::string_view expected("ud1 eax, eax");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_B9h_FFh) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xb9, 0xff) };
+    constexpr std::string_view expected("ud1 edi, edi");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_66h_0Fh_B9h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x66, 0x0f, 0xb9, 0x00) };
+    constexpr std::string_view expected("ud1 ax, word ptr[eax]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_67h_0Fh_B9h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x67, 0x0f, 0xb9, 0x00) };
+    constexpr std::string_view expected("ud1 eax, dword ptr[bx+si]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_66h_67h_0Fh_B9h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x66, 0x67, 0x0f, 0xb9, 0x00) };
+    constexpr std::string_view expected("ud1 ax, word ptr[bx+si]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_B9h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xb9, 0x00) };
+    constexpr std::string_view expected("ud1 eax, dword ptr[rax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_B9h_BFh_44h_33h_22h_11h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xb9, 0xBF, 0x44, 0x33, 0x22, 0x11) };
+    constexpr std::string_view expected("ud1 edi, dword ptr[rdi+11223344h]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_B9h_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xb9, 0xc0) };
+    constexpr std::string_view expected("ud1 eax, eax");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_B9h_FFh) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0f, 0xb9, 0xff) };
+    constexpr std::string_view expected("ud1 edi, edi");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_48h_0Fh_B9h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x48, 0x0f, 0xb9, 0x00) };
+    constexpr std::string_view expected("ud1 rax, qword ptr[rax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_66h_0Fh_B9h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x66, 0x0f, 0xb9, 0x00) };
+    constexpr std::string_view expected("ud1 ax, word ptr[rax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_67h_0Fh_B9h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x67, 0x0f, 0xb9, 0x00) };
+    constexpr std::string_view expected("ud1 eax, dword ptr[eax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_66h_67h_0Fh_B9h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x66, 0x67, 0x0f, 0xb9, 0x00) };
+    constexpr std::string_view expected("ud1 ax, word ptr[eax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+/* 82h (ADD, OR, ADC, SBB, AND, SUB, XOR, CMP) regression tests
+*/
+
+TEST(ee_fwrk_x86_format_regression, mode32_82h_00h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x00, 0x00) };
+    constexpr std::string_view expected("add byte ptr[eax], 00h");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_82h_08h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x08, 0x00) };
+    constexpr std::string_view expected("or byte ptr[eax], 00h");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_82h_10h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x10, 0x00) };
+    constexpr std::string_view expected("adc byte ptr[eax], 00h");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_82h_18h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x18, 0x00) };
+    constexpr std::string_view expected("sbb byte ptr[eax], 00h");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_82h_20h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x20, 0x00) };
+    constexpr std::string_view expected("and byte ptr[eax], 00h");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_82h_28h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x28, 0x00) };
+    constexpr std::string_view expected("sub byte ptr[eax], 00h");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_82h_30h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x30, 0x00) };
+    constexpr std::string_view expected("xor byte ptr[eax], 00h");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_82h_38h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x38, 0x00) };
+    constexpr std::string_view expected("cmp byte ptr[eax], 00h");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_82h_00h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x00, 0x00) };
+    expect_disasm_fail(EE_X86_MODE_64, in);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_82h_08h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x08, 0x00) };
+    expect_disasm_fail(EE_X86_MODE_64, in);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_82h_10h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x10, 0x00) };
+    expect_disasm_fail(EE_X86_MODE_64, in);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_82h_18h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x18, 0x00) };
+    expect_disasm_fail(EE_X86_MODE_64, in);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_82h_20h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x20, 0x00) };
+    expect_disasm_fail(EE_X86_MODE_64, in);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_82h_28h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x28, 0x00) };
+    expect_disasm_fail(EE_X86_MODE_64, in);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_82h_30h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x30, 0x00) };
+    expect_disasm_fail(EE_X86_MODE_64, in);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_82h_38h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x82, 0x38, 0x00) };
+    expect_disasm_fail(EE_X86_MODE_64, in);
+}
+
+/* SALC regression tests
+*/
+
+TEST(ee_fwrk_x86_format_regression, mode32_D6h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0xD6) };
+    constexpr std::string_view expected("salc");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_D6h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0xD6) };
+    expect_disasm_fail(EE_X86_MODE_64, in);
+}
+
+/* Multi-Byte NOPs regression tests
+*/
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_19h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x19, 0x00) };
+    constexpr std::string_view expected("nop dword ptr[eax]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_19h_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x19, 0xC0) };
+    constexpr std::string_view expected("nop eax");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_1Dh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1D, 0x00) };
+    constexpr std::string_view expected("nop dword ptr[eax]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_1Dh_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1D, 0xC0) };
+    constexpr std::string_view expected("nop eax");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_1Eh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1E, 0x00) };
+    constexpr std::string_view expected("nop dword ptr[eax]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_1Eh_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1E, 0xC0) };
+    constexpr std::string_view expected("nop eax");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_1Fh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1F, 0x00) };
+    constexpr std::string_view expected("nop dword ptr[eax]");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode32_0Fh_1Fh_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1F, 0xC0) };
+    constexpr std::string_view expected("nop eax");
+
+    expect_format(EE_X86_MODE_32, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_19h_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x19, 0x00) };
+    constexpr std::string_view expected("nop dword ptr[rax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_19h_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x19, 0xC0) };
+    constexpr std::string_view expected("nop eax");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_1Dh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1D, 0x00) };
+    constexpr std::string_view expected("nop dword ptr[rax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_1Dh_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1D, 0xC0) };
+    constexpr std::string_view expected("nop eax");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_1Eh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1E, 0x00) };
+    constexpr std::string_view expected("nop dword ptr[rax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_1Eh_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1E, 0xC0) };
+    constexpr std::string_view expected("nop eax");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_1Fh_00h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1F, 0x00) };
+    constexpr std::string_view expected("nop dword ptr[rax]");
+
+    expect_format(EE_X86_MODE_64, in, 0, expected);
+}
+
+TEST(ee_fwrk_x86_format_regression, mode64_0Fh_1Fh_C0h) {
+
+    constexpr auto in{ make_array<ee_byte_t>(0x0F, 0x1F, 0xC0) };
+    constexpr std::string_view expected("nop eax");
 
     expect_format(EE_X86_MODE_64, in, 0, expected);
 }

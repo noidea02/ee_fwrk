@@ -339,7 +339,9 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(ee_bool_t is_st
         if (opt_symbolization_params) {
 
             ee_ascii_char_t symbolized_addr[EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN] = { 0 };
-            if (opt_symbolization_params->symbolize_address(opt_symbolization_params->user_ctx, (ee_uint64_t)actual_disp, EE_TRUE, symbolized_addr, sizeof(symbolized_addr)))
+            const ee_uint64_t actual_addr = ((ee_uint64_t)actual_disp) & (disp_num_bits == 32 ? EE_UINT32_MAX : EE_UINT64_MAX);
+
+            if (opt_symbolization_params->symbolize_address(opt_symbolization_params->user_ctx, actual_addr, EE_TRUE, symbolized_addr, sizeof(symbolized_addr)))
                 return ee_strapp(output, output_buf_size, symbolized_addr);
         }
 
@@ -506,7 +508,13 @@ static ee_bool_t ee_prv_x86f_format_immediate_value_operand(const ee_prv_x86f_ba
     if (base_params->opt_symbolization_params && (operand->value_num_bits == 32 || operand->value_num_bits == 64)) {
 
         ee_ascii_char_t symbolized_addr[EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN] = { 0 };
-        if (base_params->opt_symbolization_params->symbolize_address(base_params->opt_symbolization_params->user_ctx, (ee_uint64_t)operand->value, EE_FALSE, symbolized_addr, sizeof(symbolized_addr))) {
+        ee_uint64_t address = (ee_uint64_t)operand->value;
+
+        if(operand->value_num_bits == 32) {
+            address &= 0xFFFFFFFF;
+        }
+
+        if (base_params->opt_symbolization_params->symbolize_address(base_params->opt_symbolization_params->user_ctx, address, EE_FALSE, symbolized_addr, sizeof(symbolized_addr))) {
 
             ee_strncpy(output, symbolized_addr, output_buf_size);
             return EE_TRUE;

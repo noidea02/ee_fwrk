@@ -869,6 +869,8 @@ void ee_pe_free_image_info(ee_pe_image_info_t* info, ee_free_t free) {
 
     if (info->exports)
         ee_prv_pe_free_symbols(info->exports, info->num_exports, free);
+
+    free(info);
 }
 
 #endif
