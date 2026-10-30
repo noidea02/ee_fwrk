@@ -74,12 +74,10 @@ typedef struct {
     ee_prv_pe_unified_optional_header_t opt_header;
     ee_prv_pe_section_header_t* section_headers;
     ee_size_t num_section_headers;
-    ee_pe_section_info_t rdata_section_info;
-    ee_pe_section_info_t data_section_info;
-    ee_pe_section_info_t idata_section_info;
-    ee_pe_section_info_t iat_section_info;
-    ee_pe_section_info_t edata_section_info;
-    ee_pe_section_info_t text_section_info;
+    ee_pe_section_info_t* sections;
+    ee_size_t num_sections;
+    ee_pe_section_info_t idata_section;
+    ee_pe_section_info_t edata_section;
     ee_pe_entry_point_info_t entry_point_info;
     ee_pe_import_info_t* imports;
     ee_size_t num_imports;

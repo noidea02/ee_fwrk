@@ -16,6 +16,7 @@ set(test_sources
     base/test_base_strlen.cpp
     base/test_base_strncpy.cpp
     base/test_base_strcmp.cpp
+    base/test_base_strncmp.cpp
     base/test_base_strapp.cpp
     base/test_base_strpad.cpp
     base/test_base_itoa32.cpp

@@ -113,6 +113,30 @@ ee_int32_t ee_strcmp(const ee_char8_t* str1, const ee_char8_t* str2) {
     return ee_memcmp(str1, str2, str1_len);
 }
 
+ee_int32_t ee_strncmp(const ee_char8_t* str1, const ee_char8_t* str2, ee_size_t num) {
+
+    ee_size_t chr_index = 0;
+
+    for (; chr_index != num; ++chr_index) {
+
+        const ee_char8_t cur_chr1 = str1[chr_index];
+        const ee_char8_t cur_chr2 = str2[chr_index];
+
+        if (!cur_chr1 || !cur_chr2 || cur_chr1 != cur_chr2) {
+
+            if(cur_chr1 < cur_chr2)
+                return -1;
+
+            if(cur_chr1 > cur_chr2)
+                return 1;
+
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
 ee_bool_t ee_strapp(ee_char8_t* dst, ee_size_t dst_buf_size, const ee_char8_t* src) {
 
     ee_size_t null_term_index = 0;

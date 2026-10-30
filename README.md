@@ -98,9 +98,10 @@ ee_pe implements the PE image file parser. As of today, the parser supports extr
 
 - Machine type
 - Image base
+- Entry point
 - Imports
 - Exports
-- Range info for .rdata, .data, and .text
+- Sections
 
 ee_pe is NOT subjected to fuzzing or extended testing. While the expression "use at your own risk" is true for the entire ee_fwrk library, it is especially relevant for ee_pe.
 

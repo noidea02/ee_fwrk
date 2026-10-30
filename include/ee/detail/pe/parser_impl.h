@@ -57,12 +57,32 @@ static void ee_prv_pe_free_imports(ee_pe_import_info_t* imports, ee_size_t num_i
     free(imports);
 }
 
+static void ee_prv_pe_free_sections(ee_pe_section_info_t* sections, ee_size_t num_sections, ee_free_t free) {
+
+    ee_size_t index = 0;
+
+    if (!sections)
+        return;
+
+    for (; index != num_sections; ++index) {
+
+        const ee_pe_section_info_t* const section = &sections[index];
+        if (section->name)
+            free(section->name);
+    }
+
+    free(sections);
+}
+
 static void ee_prv_pe_rii_state_free_fields(const ee_prv_pe_rii_state_t* state) {
 
     const ee_pe_rii_callbacks_t* cbs = state->callbacks;
 
     if (state->section_headers)
         cbs->free(state->section_headers);
+
+    if (state->sections)
+        ee_prv_pe_free_sections(state->sections, state->num_sections, cbs->free);
 
     if (state->imports)
         ee_prv_pe_free_imports(state->imports, state->num_imports, cbs->free);
@@ -235,23 +255,24 @@ static ee_pe_error_t ee_prv_pe_rii_state_read_section_table(ee_prv_pe_rii_state_
 
 static ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_data_dir(const ee_prv_pe_rii_state_t* state, const ee_prv_pe_data_dir_t* data_dir, ee_pe_section_info_t* section_info) {
 
-    ee_size_t hdr_index = 0;
-    for (; hdr_index != state->num_section_headers; ++hdr_index) {
+    ee_size_t section_index = 0;
+    for (; section_index != state->num_sections; ++section_index) {
 
-        const ee_prv_pe_section_header_t* const hdr = &state->section_headers[hdr_index];
+        const ee_pe_section_info_t* const section = &state->sections[section_index];
 
         const ee_uint32_t data_dir_begin = data_dir->virtual_address;
         const ee_uint32_t data_dir_end = data_dir_begin + data_dir->size;
 
-        const ee_uint32_t section_begin = hdr->virtual_address;
-        const ee_uint32_t section_end = section_begin + hdr->virtual_size;
+        const ee_uint32_t section_begin = section->rva;
+        const ee_uint32_t section_end = section_begin + section->loaded_size;
 
         if (data_dir_begin >= section_begin && data_dir_end <= section_end) {
 
             const ee_uint32_t offset = data_dir_begin - section_begin;
 
-            section_info->fp = hdr->pointer_to_raw_data + offset;
-            section_info->rva = hdr->virtual_address + offset;
+            section_info->name = 0;
+            section_info->fp = section->fp + offset;
+            section_info->rva = section->rva + offset;
             section_info->raw_size = section_info->loaded_size = data_dir->size;
 
             return EE_TRUE;
@@ -273,58 +294,38 @@ static ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_data_dir_index(const
     return ee_prv_pe_rii_state_lookup_section_info_by_data_dir(state, data_dir, section_info);
 }
 
-static ee_bool_t ee_prv_pe_rii_state_lookup_section_info_by_section_name(const ee_prv_pe_rii_state_t* state, const ee_ascii_char_t* name, ee_pe_section_info_t* section_info) {
+static void ee_prv_pe_rii_state_collect_sections(ee_prv_pe_rii_state_t* state) {
 
     ee_size_t hdr_index = 0;
+
+    /* 1) Collect all sections. */
+    state->sections = (ee_pe_section_info_t*)state->callbacks->calloc(state->num_section_headers, sizeof(ee_pe_section_info_t));
+    state->num_sections = state->num_section_headers;
+
     for (; hdr_index != state->num_section_headers; ++hdr_index) {
 
         const ee_prv_pe_section_header_t* const hdr = &state->section_headers[hdr_index];
-        if (!ee_strcmp(hdr->name, name)) {
+        ee_pe_section_info_t* const section_info = &state->sections[hdr_index];
+        ee_size_t section_name_len = 0;
 
-            section_info->fp = hdr->pointer_to_raw_data;
-            section_info->rva = hdr->virtual_address;
-            section_info->raw_size = hdr->size_of_raw_data;
-            section_info->loaded_size = hdr->virtual_size;
+        if (hdr->name[sizeof(hdr->name) - 1])
+            section_name_len = sizeof(hdr->name);
+        else
+            section_name_len = ee_strlen(hdr->name);
 
-            return EE_TRUE;
-        }
+        section_info->name = (ee_ascii_char_t*)state->callbacks->calloc(section_name_len + 1, sizeof(ee_ascii_char_t));
+        ee_memcpy(section_info->name, hdr->name, section_name_len);
+
+        section_info->fp = hdr->pointer_to_raw_data;
+        section_info->rva = hdr->virtual_address;
+        section_info->raw_size = hdr->size_of_raw_data;
+        section_info->loaded_size = hdr->virtual_size;
+        section_info->flags = hdr->characteristics;
     }
 
-    return EE_FALSE;
-}
-
-static void ee_prv_pe_rii_state_collect_section_info(ee_prv_pe_rii_state_t* state) {
-
-    ee_bool_t idata_found = EE_FALSE;
-    ee_bool_t edata_found = EE_FALSE;
-
-    ee_pe_section_info_t section_info = { 0 };
-
-    ee_ascii_char_t deob_buf[64] = { 0 };
-    const ee_size_t deob_buf_size = sizeof(deob_buf);
-
-    /* Lookup rdata, data and text section. */
-    ee_prv_pe_rii_state_lookup_section_info_by_section_name(state, EE_OBFUSCATED_SL("\xE2\xBE\x31\x35\x9C\x65", deob_buf, deob_buf_size), &state->rdata_section_info);
-    ee_prv_pe_rii_state_lookup_section_info_by_section_name(state, EE_OBFUSCATED_SL("\xE2\xA8\x34\x20\x89", deob_buf, deob_buf_size), &state->data_section_info);
-    ee_prv_pe_rii_state_lookup_section_info_by_section_name(state, EE_OBFUSCATED_SL("\xE2\xB8\x30\x2C\x9C", deob_buf, deob_buf_size), &state->text_section_info);
-
-    /* Lookup idata. */
-    idata_found = ee_prv_pe_rii_state_lookup_section_info_by_data_dir_index(state, EE_PRV_PE_DATA_DIR_INDEX_IMPORT_TABLE, &section_info)
-        || ee_prv_pe_rii_state_lookup_section_info_by_section_name(state, EE_OBFUSCATED_SL("\xE2\xA5\xA8\x34\x20\x89", deob_buf, deob_buf_size), &section_info);
-
-    if (idata_found)
-        state->idata_section_info = section_info;
-
-    /* Lookup IAT. */
-    if (ee_prv_pe_rii_state_lookup_section_info_by_data_dir_index(state, EE_PRV_PE_DATA_DIR_INDEX_IAT, &section_info))
-        state->iat_section_info = section_info;
-
-    /* Lookup edata. */
-    edata_found = ee_prv_pe_rii_state_lookup_section_info_by_data_dir_index(state, EE_PRV_PE_DATA_DIR_INDEX_EXPORT_TABLE, &section_info)
-        || ee_prv_pe_rii_state_lookup_section_info_by_section_name(state, EE_OBFUSCATED_SL("\xE2\xA9\x31\x35\x9C\x65", deob_buf, deob_buf_size), &section_info);
-
-    if (edata_found)
-        state->edata_section_info = section_info;
+    /* 2) Find special sections (.idata, .edata). */
+    ee_prv_pe_rii_state_lookup_section_info_by_data_dir_index(state, EE_PRV_PE_DATA_DIR_INDEX_IMPORT_TABLE, &state->idata_section);
+    ee_prv_pe_rii_state_lookup_section_info_by_data_dir_index(state, EE_PRV_PE_DATA_DIR_INDEX_EXPORT_TABLE, &state->edata_section);
 }
 
 static ee_bool_t ee_prv_pe_rii_state_lookup_fp_by_rva(ee_prv_pe_rii_state_t* state, ee_uint32_t rva, ee_uint32_t* fp) {
@@ -352,7 +353,7 @@ static ee_bool_t ee_prv_pe_rii_state_lookup_fp_by_rva(ee_prv_pe_rii_state_t* sta
 static ee_pe_error_t ee_prv_pe_rii_state_collect_entry_point_info(ee_prv_pe_rii_state_t* state) {
 
     ee_uint32_t fp = 0;
-    if(!ee_prv_pe_rii_state_lookup_fp_by_rva(state, state->opt_header.address_of_entry_point, &fp))
+    if (!ee_prv_pe_rii_state_lookup_fp_by_rva(state, state->opt_header.address_of_entry_point, &fp))
         return EE_PE_MALFORMED_FILE;
 
     state->entry_point_info.fp = fp;
@@ -580,7 +581,7 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_imports_from_entry(ee_prv_pe_ri
 
 static ee_pe_error_t ee_prv_pe_rii_state_collect_imports(ee_prv_pe_rii_state_t* state) {
 
-    const ee_pe_section_info_t* const idata = &state->idata_section_info;
+    const ee_pe_section_info_t* const idata = &state->idata_section;
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
     const ee_read_data_wrapper_t* const read_data = &cbs->read_data;
 
@@ -651,8 +652,8 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_exported_symbol_info(ee_prv_pe_
     const ee_uint32_t name_table_entry_fp = export_dir_info->name_table_fp + (ee_uint32_t)symbol_index * sizeof(name_table_entry);
     ee_uint32_t addr_table_entry_fp = 0;
 
-    const ee_uint32_t edata_begin_rva = state->edata_section_info.rva;
-    const ee_uint32_t edata_end_rva = edata_begin_rva + state->edata_section_info.loaded_size;
+    const ee_uint32_t edata_begin_rva = state->edata_section.rva;
+    const ee_uint32_t edata_end_rva = edata_begin_rva + state->edata_section.loaded_size;
 
     ee_pe_error_t err = EE_PE_FAILURE;
 
@@ -728,7 +729,7 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_exported_symbol_info(ee_prv_pe_
 
 static ee_pe_error_t ee_prv_pe_rii_state_collect_exports(ee_prv_pe_rii_state_t* state) {
 
-    const ee_pe_section_info_t* const edata = &state->edata_section_info;
+    const ee_pe_section_info_t* const edata = &state->edata_section;
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
     const ee_read_data_wrapper_t* const read_data = &cbs->read_data;
 
@@ -814,12 +815,12 @@ ee_pe_error_t ee_pe_read_image_info(const ee_pe_rii_callbacks_t* callbacks, ee_p
     if (error != EE_PE_SUCCESS)
         goto cleanup;
 
-    /* 4) Collect section info. */
-    ee_prv_pe_rii_state_collect_section_info(&state);
+    /* 4) Collect sections. */
+    ee_prv_pe_rii_state_collect_sections(&state);
 
     /* 5) Collection entry point info. */
     error = ee_prv_pe_rii_state_collect_entry_point_info(&state);
-    if(error != EE_PE_SUCCESS)
+    if (error != EE_PE_SUCCESS)
         goto cleanup;
 
     /* 6) Collect imported symbols. */
@@ -844,10 +845,10 @@ ee_pe_error_t ee_pe_read_image_info(const ee_pe_rii_callbacks_t* callbacks, ee_p
     tmp_out->num_imports = state.num_imports;
     tmp_out->exports = state.exports;
     tmp_out->num_exports = state.num_exports;
-    tmp_out->rdata_section_info = state.rdata_section_info;
-    tmp_out->data_section_info = state.data_section_info;
-    tmp_out->text_section_info = state.text_section_info;
+    tmp_out->sections = state.sections;
+    tmp_out->num_sections = state.num_sections;
 
+    state.sections = 0;
     state.imports = 0;
     state.exports = 0;
 
@@ -869,6 +870,9 @@ void ee_pe_free_image_info(ee_pe_image_info_t* info, ee_free_t free) {
 
     if (info->exports)
         ee_prv_pe_free_symbols(info->exports, info->num_exports, free);
+
+    if (info->sections)
+        ee_prv_pe_free_sections(info->sections, info->num_sections, free);
 
     free(info);
 }

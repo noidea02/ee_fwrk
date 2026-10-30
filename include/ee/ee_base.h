@@ -116,6 +116,7 @@ void* ee_memset(void* dst, ee_byte_t val, ee_size_t count);
 ee_size_t ee_strlen(const ee_char8_t* str);
 ee_char8_t* ee_strncpy(ee_char8_t* dst, const ee_char8_t* src, ee_size_t num);
 ee_int32_t ee_strcmp(const ee_char8_t* str1, const ee_char8_t* str2);
+ee_int32_t ee_strncmp(const ee_char8_t* str1, const ee_char8_t* str2, ee_size_t num);
 ee_bool_t ee_strapp(ee_char8_t* dst, ee_size_t dst_buf_size, const ee_char8_t* src);
 ee_bool_t ee_strpad(const ee_char8_t* src, ee_size_t desired_size, ee_bool_t pad_front, ee_char8_t pad_chr, ee_char8_t* dst, ee_size_t dst_buf_size);
 ee_bool_t ee_itoa32(ee_int32_t in, ee_char8_t* out, ee_size_t out_size, ee_bool_t hex);

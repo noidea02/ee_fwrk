@@ -44,10 +44,12 @@ struct ee_pe_rii_callbacks {
 
 typedef struct {
 
+    ee_ascii_char_t* name;
     ee_uint32_t fp;
     ee_uint32_t rva;
     ee_uint32_t raw_size;
     ee_uint32_t loaded_size;
+    ee_uint32_t flags;
 
 } ee_pe_section_info_t;
 
@@ -86,15 +88,27 @@ struct ee_pe_image_info  {
     ee_size_t num_imports;
     ee_pe_symbol_info_t* exports;
     ee_size_t num_exports;
-    ee_pe_section_info_t rdata_section_info;
-    ee_pe_section_info_t data_section_info;
-    ee_pe_section_info_t text_section_info;
+    ee_pe_section_info_t* sections;
+    ee_size_t num_sections;
 };
 
 /* Constants
 */
 
 #define EE_PE_ORDINAL_UNUSED -1
+
+#define EE_PE_SECTION_FLAG_CNT_CODE 0x00000020
+#define EE_PE_SECTION_FLAG_CNT_INITIALIZED_DATA 0x00000040
+#define EE_PE_SECTION_FLAG_CNT_UNINITIALIZED_DATA 0x00000080
+#define EE_PE_SECTION_FLAG_GPREL 0x00008000
+#define EE_PE_SECTION_FLAG_LNK_NRELOC_OVFL 0x01000000
+#define EE_PE_SECTION_FLAG_MEM_DISCARDABLE 0x02000000
+#define EE_PE_SECTION_FLAG_MEM_NOT_CACHED 0x04000000
+#define EE_PE_SECTION_FLAG_MEM_NOT_PAGED 0x08000000
+#define EE_PE_SECTION_FLAG_MEM_SHARED 0x10000000
+#define EE_PE_SECTION_FLAG_MEM_EXECUTE 0x20000000
+#define EE_PE_SECTION_FLAG_MEM_READ 0x40000000
+#define EE_PE_SECTION_FLAG_MEM_WRITE 0x80000000
 
 /* Implementation
 */
