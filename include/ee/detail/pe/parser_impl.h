@@ -690,7 +690,7 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_exported_symbol_info(ee_prv_pe_
             return err;
 
         forwarder_info_len = ee_strlen(forwarder_info);
-        out->forwarder_info = (ee_ascii_char_t*)cbs->calloc(forwarder_info_len, sizeof(ee_ascii_char_t) + 1);
+        out->forwarder_info = (ee_ascii_char_t*)cbs->calloc(forwarder_info_len + 1, sizeof(ee_ascii_char_t));
 
         if (!out->forwarder_info)
             return EE_PE_BAD_ALLOC;
@@ -718,7 +718,7 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_exported_symbol_info(ee_prv_pe_
         return err;
 
     name_len = ee_strlen(name);
-    out->name = (ee_ascii_char_t*)cbs->calloc(name_len, sizeof(ee_ascii_char_t) + 1);
+    out->name = (ee_ascii_char_t*)cbs->calloc(name_len + 1, sizeof(ee_ascii_char_t));
 
     if (!out->name)
         return EE_PE_BAD_ALLOC;
@@ -835,8 +835,11 @@ ee_pe_error_t ee_pe_read_image_info(const ee_pe_rii_callbacks_t* callbacks, ee_p
 
     /* 8) Write output. */
     tmp_out = (ee_pe_image_info_t*)callbacks->calloc(1, sizeof(ee_pe_image_info_t));
-    if (!tmp_out)
-        return EE_PE_BAD_ALLOC;
+    if (!tmp_out) {
+
+        error = EE_PE_BAD_ALLOC;
+        goto cleanup;
+    }
 
     tmp_out->machine = ee_prv_pe_raw_machine_value_to_machine_type(state.coff_file_header.machine);
     tmp_out->image_base = state.opt_header.image_base;
