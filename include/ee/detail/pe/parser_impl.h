@@ -772,9 +772,6 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_export_with_ordinal(ee_prv_pe_r
     ee_uint32_t addr_table_entry = 0;
     ee_uint32_t addr_table_entry_fp = 0;
 
-    const ee_uint32_t edata_begin_rva = state->edata_section.rva;
-    const ee_uint32_t edata_end_rva = edata_begin_rva + state->edata_section.loaded_size;
-
     ee_pe_symbol_info_t* out = 0;
     ee_pe_error_t err = EE_PE_FAILURE;
 
