@@ -15,7 +15,7 @@ static ee_int##bits##_t ee_prv_endian_flip_int##bits(ee_int##bits##_t in) {\
     ee_byte_t* const out_bytes = (ee_byte_t*)&out;\
     ee_size_t byte_index = 0;\
     \
-    for(; byte_index != sizeof(out); ++byte_index)\
+    for (; byte_index != sizeof(out); ++byte_index)\
         out_bytes[byte_index] = in_bytes[sizeof(out) - 1 - byte_index];\
         \
     return out;\

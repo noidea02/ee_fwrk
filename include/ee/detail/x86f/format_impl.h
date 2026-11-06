@@ -153,7 +153,7 @@ static ee_bool_t ee_prv_x86f_format_relative_address_operand(const ee_prv_x86f_b
         
         final_addr &= (ee_uint64_t)EE_UINT16_MAX;
     }
-    else if(base_params->active_mode == EE_X86_MODE_32 && !base_params->has_active_operand_size_override) {
+    else if (base_params->active_mode == EE_X86_MODE_32 && !base_params->has_active_operand_size_override) {
 
         final_addr &= (ee_uint64_t)EE_UINT32_MAX;
     }
@@ -345,10 +345,10 @@ static ee_bool_t ee_prv_x86f_format_pointer_operand_displacement(const ee_prv_x8
             ee_ascii_char_t symbolized_addr[EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN] = { 0 };
             ee_uint64_t actual_addr = (ee_uint64_t)actual_disp;
 
-            if(base_params->active_mode == EE_X86_MODE_16 || (base_params->active_mode == EE_X86_MODE_32 && base_params->has_active_address_size_override)) {
+            if (base_params->active_mode == EE_X86_MODE_16 || (base_params->active_mode == EE_X86_MODE_32 && base_params->has_active_address_size_override)) {
                 actual_addr &= EE_UINT16_MAX;
             }
-            else if(base_params->active_mode == EE_X86_MODE_32 || (base_params->active_mode == EE_X86_MODE_64 && base_params->has_active_address_size_override)) {
+            else if (base_params->active_mode == EE_X86_MODE_32 || (base_params->active_mode == EE_X86_MODE_64 && base_params->has_active_address_size_override)) {
                 actual_addr &= EE_UINT32_MAX;
             }
 
@@ -521,7 +521,7 @@ static ee_bool_t ee_prv_x86f_format_immediate_value_operand(const ee_prv_x86f_ba
         ee_ascii_char_t symbolized_addr[EE_PRV_X86F_SYMBOLIZED_ADDR_MAX_LEN] = { 0 };
         ee_uint64_t address = (ee_uint64_t)operand->value;
 
-        if(operand->value_num_bits == 32) {
+        if (operand->value_num_bits == 32) {
             address &= 0xFFFFFFFF;
         }
 

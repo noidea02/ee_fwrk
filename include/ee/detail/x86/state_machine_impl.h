@@ -1723,7 +1723,7 @@ static ee_bool_t ee_prv_x86_check_grp_prefix_constraints(const ee_prv_x86_prefix
                 if (!group_index) {
 
                     /* Special case for group 1: Check stacked prefix byte. */
-                    if(prefix_state->stacked_grp1_prefix == mandatory_prefix_byte)
+                    if (prefix_state->stacked_grp1_prefix == mandatory_prefix_byte)
                         mandatory_prefix_available = EE_TRUE;
                 }
             }

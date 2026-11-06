@@ -138,7 +138,7 @@ static ee_bool_t ee_prv_x86_process_operands_axOeaxOraxMODEpASO_cxOecxOrcxMODE_d
         reg1_type = EE_X86_GPP_REGISTER_RCX;
         reg2_type = EE_X86_GPP_REGISTER_RDX;
     }
-    else if(ee_prv_x86_state_is_16_bit_mode_active(distate)) {
+    else if (ee_prv_x86_state_is_16_bit_mode_active(distate)) {
 
         if (has_addr_size_override)
             reg0_type = EE_X86_GPP_REGISTER_EAX;

@@ -164,7 +164,7 @@ ee_bool_t hex_str_to_byte_array(const char* str, ee_byte_t* buf, ee_size_t* buf_
         if (buf && buf_index < *buf_size) {
             buf[buf_index] = cur_byte;
         }
-        else if(!no_buf) {
+        else if (!no_buf) {
             no_buf = EE_TRUE;
         }
 

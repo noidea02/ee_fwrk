@@ -83,6 +83,7 @@ typedef struct {
     ee_size_t num_imports;
     ee_pe_symbol_info_t* exports;
     ee_size_t num_exports;
+    ee_size_t cur_export_index;
 
 } ee_prv_pe_rii_state_t;
 
@@ -110,6 +111,7 @@ typedef struct {
     ee_size_t num_addr_table_entries;
     ee_uint32_t name_table_fp;
     ee_uint32_t ordinal_table_fp;
+    ee_size_t num_names_and_ordinals;
 
 } ee_prv_pe_export_directory_info_t;
 

@@ -124,10 +124,10 @@ ee_int32_t ee_strncmp(const ee_char8_t* str1, const ee_char8_t* str2, ee_size_t 
 
         if (!cur_chr1 || !cur_chr2 || cur_chr1 != cur_chr2) {
 
-            if(cur_chr1 < cur_chr2)
+            if (cur_chr1 < cur_chr2)
                 return -1;
 
-            if(cur_chr1 > cur_chr2)
+            if (cur_chr1 > cur_chr2)
                 return 1;
 
             return 0;

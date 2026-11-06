@@ -149,13 +149,13 @@ namespace {
     ee_bool_t symbolize_address_with_test_context(void* user_ctx, ee_uint64_t address, ee_bool_t is_address, ee_ascii_char_t* symbol, ee_size_t symbol_size) {
 
         const auto test_ctx{ (symbolization_test_context*)user_ctx };
-        if(test_ctx->called_before)
+        if (test_ctx->called_before)
             return EE_FALSE;
 
         test_ctx->called_before = true;
         test_ctx->success = false;
 
-        if(test_ctx->expected_is_address != (bool)is_address)
+        if (test_ctx->expected_is_address != (bool)is_address)
             return EE_FALSE;
 
         test_ctx->success = test_ctx->expected_address == address;
@@ -165,7 +165,7 @@ namespace {
     bool expect_computed_address(ee_x86_mode_t mode, std::span<const ee_byte_t> inst, ee_uint64_t inst_addr, ee_uint64_t expected_computed_addr, ee_bool_t expected_is_addr) {
 
         ee_x86_disasm_output dis_out{};
-        if(!ee_x86_disasm(mode, inst.data(), inst.size(), &dis_out))
+        if (!ee_x86_disasm(mode, inst.data(), inst.size(), &dis_out))
             return false;
 
         symbolization_test_context symbolization_ctx{};
@@ -179,7 +179,7 @@ namespace {
         ee_ascii_char_t format[128]{};
         ee_size_t format_size{ sizeof(format) };
 
-        if(!ee_x86_format(mode, inst_addr, &dis_out, &symbolization_params, format, &format_size))
+        if (!ee_x86_format(mode, inst_addr, &dis_out, &symbolization_params, format, &format_size))
             return false;
 
         return symbolization_ctx.success;
@@ -196,7 +196,7 @@ namespace {
     bool expect_computed_addresses(ee_x86_mode_t mode, std::span<const ee_byte_t> inst, ee_uint64_t inst_addr, std::span<const symbolized_address_info> expected_computed_addresses) {
 
         ee_x86_disasm_output dis_out{};
-        if(!ee_x86_disasm(mode, inst.data(), inst.size(), &dis_out))
+        if (!ee_x86_disasm(mode, inst.data(), inst.size(), &dis_out))
             return false;
 
         std::vector<symbolized_address_info> computed_addresses;
@@ -208,12 +208,12 @@ namespace {
         ee_ascii_char_t format[128]{};
         ee_size_t format_size{ sizeof(format) };
 
-        if(!ee_x86_format(mode, inst_addr, &dis_out, &symbolization_params, format, &format_size))
+        if (!ee_x86_format(mode, inst_addr, &dis_out, &symbolization_params, format, &format_size))
             return false;
 
-        for(const auto& expected_computed_address : expected_computed_addresses) {
+        for (const auto& expected_computed_address : expected_computed_addresses) {
 
-            if(std::find(computed_addresses.begin(), computed_addresses.end(), expected_computed_address) == computed_addresses.end())
+            if (std::find(computed_addresses.begin(), computed_addresses.end(), expected_computed_address) == computed_addresses.end())
                 return false;
         }
 

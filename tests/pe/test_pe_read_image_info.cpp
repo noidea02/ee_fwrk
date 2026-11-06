@@ -64,39 +64,59 @@ namespace {
         return std::nullopt;
     }
 
-    std::optional<std::reference_wrapper<const ee_pe_symbol_info_t>> ee_pe_import_info_find_symbol(const ee_pe_import_info_t& import_info,
-        const symbol_info& criteria) {
+    bool does_ee_pe_symbol_meet_criteria(const ee_pe_symbol_info_t& symbol, const symbol_info& criteria) {
 
         const auto opt_expected_symbol_name_low{ !criteria.opt_name ? std::nullopt : std::optional(str_to_lower(criteria.opt_name.value())) };
+
+        if (opt_expected_symbol_name_low) {
+
+            if (!symbol.name || str_to_lower(symbol.name) != opt_expected_symbol_name_low)
+                return false;
+        }
+        else if (criteria.opt_ordinal) {
+
+            if (symbol.biased_ordinal == EE_PE_ORDINAL_UNUSED || symbol.biased_ordinal != criteria.opt_ordinal.value())
+                return false;
+        }
+        else {
+
+            std::terminate();
+        }
+
+        return true;
+    }
+
+    std::optional<std::reference_wrapper<const ee_pe_symbol_info_t>> ee_pe_import_info_find_symbol(const ee_pe_import_info_t& import_info,
+        const symbol_info& criteria) {
 
         for (size_t i{}; i != import_info.num_symbols; ++i) {
 
             const auto& cur_symbol{ import_info.symbols[i] };
-            if (opt_expected_symbol_name_low) {
-
-                if (!cur_symbol.name || str_to_lower(cur_symbol.name) != opt_expected_symbol_name_low)
-                    continue;
-            }
-            else if (criteria.opt_ordinal) {
-
-                if (cur_symbol.biased_ordinal == EE_PE_ORDINAL_UNUSED || cur_symbol.biased_ordinal != criteria.opt_ordinal.value())
-                    continue;
-            }
-            else {
-
-                std::terminate();
-            }
-
-            return std::optional(std::cref(cur_symbol));
+            if (does_ee_pe_symbol_meet_criteria(cur_symbol, criteria))
+                return std::optional(std::cref(cur_symbol));
         }
 
         return  std::nullopt;
+    }
+
+    std::optional<std::reference_wrapper<const ee_pe_symbol_info_t>> ee_pe_image_info_find_export(const ee_pe_image_info& image_info,
+        const symbol_info& criteria) {
+
+        for (size_t i{}; i != image_info.num_exports; ++i) {
+
+            const auto& cur_symbol{ image_info.exports[i] };
+            if (does_ee_pe_symbol_meet_criteria(cur_symbol, criteria))
+                return std::optional(std::cref(cur_symbol));
+        }
+
+        return std::nullopt;
     }
 
     void assert_ee_pe_image_info_expectations(const ee_pe_image_info& is, const image_info& expected) {
 
         ASSERT_EQ(is.machine, expected.machine_type);
         ASSERT_GE(is.num_imports, expected.imports.size());
+        ASSERT_GE(is.num_exports, expected.exports.size());
 
         if (expected.imports.size()) {
 
@@ -113,6 +133,15 @@ namespace {
                     const auto opt_found_symbol{ ee_pe_import_info_find_symbol(found_import, expected_symbol) };
                     ASSERT_TRUE(opt_found_symbol);
                 }
+            }
+        }
+
+        if (expected.exports.size()) {
+
+            for (const auto& expected_export : expected.exports) {
+
+                const auto opt_found_export{ ee_pe_image_info_find_export(is, expected_export) };
+                ASSERT_TRUE(opt_found_export);
             }
         }
     }

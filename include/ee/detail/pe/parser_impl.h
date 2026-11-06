@@ -350,16 +350,14 @@ static ee_bool_t ee_prv_pe_rii_state_lookup_fp_by_rva(ee_prv_pe_rii_state_t* sta
     return EE_FALSE;
 }
 
-static ee_pe_error_t ee_prv_pe_rii_state_collect_entry_point_info(ee_prv_pe_rii_state_t* state) {
+static void ee_prv_pe_rii_state_collect_entry_point_info(ee_prv_pe_rii_state_t* state) {
 
     ee_uint32_t fp = 0;
     if (!ee_prv_pe_rii_state_lookup_fp_by_rva(state, state->opt_header.address_of_entry_point, &fp))
-        return EE_PE_MALFORMED_FILE;
+        return;
 
     state->entry_point_info.fp = fp;
     state->entry_point_info.rva = state->opt_header.address_of_entry_point;
-
-    return EE_PE_SUCCESS;
 }
 
 static ee_int32_t ee_prv_pe_strlen_with_limit(const ee_ascii_char_t* str, ee_size_t str_size) {
@@ -639,41 +637,29 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_imports(ee_prv_pe_rii_state_t* 
     return EE_PE_SUCCESS;
 }
 
-static ee_pe_error_t ee_prv_pe_rii_state_collect_exported_symbol_info(ee_prv_pe_rii_state_t* state, const ee_prv_pe_export_directory_info_t* export_dir_info, ee_size_t symbol_index, ee_pe_symbol_info_t* out) {
+static ee_bool_t ee_prv_does_symbol_info_array_contain_biased_ordinal(const ee_pe_symbol_info_t* symbols, ee_size_t num_symbols, ee_int32_t biased_ordinal) {
+
+    ee_size_t symbol_index = 0;
+
+    for (; symbol_index != num_symbols; ++symbol_index) {
+
+        const ee_pe_symbol_info_t* const symbol = &symbols[symbol_index];
+        if (symbol->biased_ordinal == biased_ordinal)
+            return EE_TRUE;
+    }
+
+    return EE_FALSE;
+}
+
+static ee_pe_error_t ee_prv_pe_rii_state_consume_export_directory_address_table_entry(ee_prv_pe_rii_state_t* state, ee_uint32_t addr_table_entry, ee_pe_symbol_info_t* out) {
 
     const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
     const ee_read_data_wrapper_t* const read_data = &cbs->read_data;
-
-    ee_uint16_t unbiased_ordinal = 0;
-    ee_uint32_t name_table_entry = 0;
-    ee_uint32_t addr_table_entry = 0;
-
-    const ee_uint32_t ordinal_table_entry_fp = export_dir_info->ordinal_table_fp + (ee_uint32_t)symbol_index * sizeof(unbiased_ordinal);
-    const ee_uint32_t name_table_entry_fp = export_dir_info->name_table_fp + (ee_uint32_t)symbol_index * sizeof(name_table_entry);
-    ee_uint32_t addr_table_entry_fp = 0;
 
     const ee_uint32_t edata_begin_rva = state->edata_section.rva;
     const ee_uint32_t edata_end_rva = edata_begin_rva + state->edata_section.loaded_size;
 
     ee_pe_error_t err = EE_PE_FAILURE;
-
-    ee_uint32_t name_fp = 0;
-    ee_ascii_char_t name[EE_PRV_PE_LIMIT_MAX_STRING_LENGTH] = { 0 };
-    ee_size_t name_len = 0;
-
-    if (!read_data->cb(read_data->ctx, ordinal_table_entry_fp, sizeof(unbiased_ordinal), &unbiased_ordinal))
-        return EE_PE_MALFORMED_FILE;
-
-    if (unbiased_ordinal >= export_dir_info->num_addr_table_entries)
-        return EE_PE_MALFORMED_FILE;
-
-    if (!read_data->cb(read_data->ctx, name_table_entry_fp, sizeof(name_table_entry), &name_table_entry))
-        return EE_PE_MALFORMED_FILE;
-
-    addr_table_entry_fp = export_dir_info->addr_table_fp + unbiased_ordinal * sizeof(addr_table_entry);
-
-    if (!read_data->cb(read_data->ctx, addr_table_entry_fp, sizeof(addr_table_entry), &addr_table_entry))
-        return EE_PE_MALFORMED_FILE;
 
     if (addr_table_entry >= edata_begin_rva && addr_table_entry < edata_end_rva) {
 
@@ -708,6 +694,55 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_exported_symbol_info(ee_prv_pe_
         out->rva = addr_table_entry;
     }
 
+    return EE_PE_SUCCESS;
+}
+
+static ee_pe_error_t ee_prv_pe_rii_state_collect_export_with_name(ee_prv_pe_rii_state_t* state, const ee_prv_pe_export_directory_info_t* export_dir_info, ee_size_t symbol_index) {
+
+    const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
+    const ee_read_data_wrapper_t* const read_data = &cbs->read_data;
+
+    ee_uint16_t unbiased_ordinal = 0;
+    ee_uint32_t name_table_entry = 0;
+    ee_uint32_t addr_table_entry = 0;
+
+    const ee_uint32_t ordinal_table_entry_fp = export_dir_info->ordinal_table_fp + (ee_uint32_t)symbol_index * sizeof(unbiased_ordinal);
+    const ee_uint32_t name_table_entry_fp = export_dir_info->name_table_fp + (ee_uint32_t)symbol_index * sizeof(name_table_entry);
+    ee_uint32_t addr_table_entry_fp = 0;
+
+    ee_pe_symbol_info_t* out = 0;
+    ee_pe_error_t err = EE_PE_FAILURE;
+
+    ee_uint32_t name_fp = 0;
+    ee_ascii_char_t name[EE_PRV_PE_LIMIT_MAX_STRING_LENGTH] = { 0 };
+    ee_size_t name_len = 0;
+
+    if (!read_data->cb(read_data->ctx, ordinal_table_entry_fp, sizeof(unbiased_ordinal), &unbiased_ordinal))
+        return EE_PE_MALFORMED_FILE;
+
+    if (!read_data->cb(read_data->ctx, name_table_entry_fp, sizeof(name_table_entry), &name_table_entry))
+        return EE_PE_MALFORMED_FILE;
+
+    if (unbiased_ordinal >= export_dir_info->num_addr_table_entries)
+        return EE_PE_MALFORMED_FILE;
+
+    addr_table_entry_fp = export_dir_info->addr_table_fp + unbiased_ordinal * sizeof(addr_table_entry);
+
+    if (!read_data->cb(read_data->ctx, addr_table_entry_fp, sizeof(addr_table_entry), &addr_table_entry))
+        return EE_PE_MALFORMED_FILE;
+
+    if (!addr_table_entry)
+        return EE_PE_SUCCESS;
+
+    if (state->cur_export_index >= state->num_exports)
+        return EE_PE_MALFORMED_FILE;
+
+    out = &state->exports[state->cur_export_index++];
+
+    err = ee_prv_pe_rii_state_consume_export_directory_address_table_entry(state, addr_table_entry, out);
+    if (err != EE_PE_SUCCESS)
+        return err;
+
     out->biased_ordinal = (ee_uint16_t)(export_dir_info->ordinal_base + unbiased_ordinal);
 
     if (!ee_prv_pe_rii_state_lookup_fp_by_rva(state, name_table_entry, &name_fp))
@@ -727,6 +762,95 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_exported_symbol_info(ee_prv_pe_
     return EE_PE_SUCCESS;
 }
 
+static ee_pe_error_t ee_prv_pe_rii_state_collect_export_with_ordinal(ee_prv_pe_rii_state_t* state, const ee_prv_pe_export_directory_info_t* export_dir_info, ee_size_t symbol_index) {
+
+    const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
+    const ee_read_data_wrapper_t* const read_data = &cbs->read_data;
+
+    const ee_uint16_t unbiased_ordinal = (ee_uint16_t)symbol_index;
+    const ee_int32_t biased_ordinal = (ee_uint16_t)(export_dir_info->ordinal_base + unbiased_ordinal);
+    ee_uint32_t addr_table_entry = 0;
+    ee_uint32_t addr_table_entry_fp = 0;
+
+    const ee_uint32_t edata_begin_rva = state->edata_section.rva;
+    const ee_uint32_t edata_end_rva = edata_begin_rva + state->edata_section.loaded_size;
+
+    ee_pe_symbol_info_t* out = 0;
+    ee_pe_error_t err = EE_PE_FAILURE;
+
+    if (unbiased_ordinal >= export_dir_info->num_addr_table_entries)
+        return EE_PE_MALFORMED_FILE;
+
+    if (ee_prv_does_symbol_info_array_contain_biased_ordinal(state->exports, state->cur_export_index, biased_ordinal))
+        return EE_PE_SUCCESS;
+
+    addr_table_entry_fp = export_dir_info->addr_table_fp + unbiased_ordinal * sizeof(addr_table_entry);
+
+    if (!read_data->cb(read_data->ctx, addr_table_entry_fp, sizeof(addr_table_entry), &addr_table_entry))
+        return EE_PE_MALFORMED_FILE;
+
+    if (!addr_table_entry)
+        return EE_PE_SUCCESS;
+
+    if (state->cur_export_index >= state->num_exports)
+        return EE_PE_MALFORMED_FILE;
+
+    out = &state->exports[state->cur_export_index++];
+
+    err = ee_prv_pe_rii_state_consume_export_directory_address_table_entry(state, addr_table_entry, out);
+    if (err != EE_PE_SUCCESS)
+        return err;
+
+    out->biased_ordinal = biased_ordinal;
+    return EE_PE_SUCCESS;
+}
+
+static ee_pe_error_t ee_prv_pe_rii_state_crop_exports(ee_prv_pe_rii_state_t* state) {
+
+    const ee_pe_rii_callbacks_t* const cbs = state->callbacks;
+    const ee_size_t actual_num_exports = state->cur_export_index;
+
+    ee_pe_symbol_info_t* uncropped_exports = 0;
+    ee_size_t num_uncropped_exports = 0;
+    ee_size_t export_index = 0;
+    ee_pe_error_t result = EE_PE_FAILURE;
+
+    if (state->num_exports < actual_num_exports)
+        return EE_PE_FAILURE;
+
+    if (state->num_exports == actual_num_exports)
+        return EE_PE_SUCCESS;
+
+    uncropped_exports = state->exports;
+    num_uncropped_exports = state->num_exports;
+
+    state->exports = (ee_pe_symbol_info_t*)cbs->calloc(actual_num_exports, sizeof(ee_pe_symbol_info_t));
+    if (!state->exports) {
+       
+        result = EE_PE_BAD_ALLOC;
+        goto cleanup;
+    }
+
+    state->num_exports = actual_num_exports;
+
+    for (; export_index != actual_num_exports; ++export_index) {
+        
+        ee_pe_symbol_info_t* const dst_symbol_info = &state->exports[export_index];
+        ee_pe_symbol_info_t* const src_symbol_info = &uncropped_exports[export_index];
+
+        *dst_symbol_info = *src_symbol_info;
+
+        ee_memset(src_symbol_info, 0, sizeof(*src_symbol_info));
+    }
+
+    result = EE_PE_SUCCESS;
+
+cleanup:
+
+    ee_prv_pe_free_symbols(uncropped_exports, num_uncropped_exports, cbs->free);
+    return result;
+}
+
 static ee_pe_error_t ee_prv_pe_rii_state_collect_exports(ee_prv_pe_rii_state_t* state) {
 
     const ee_pe_section_info_t* const edata = &state->edata_section;
@@ -735,7 +859,7 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_exports(ee_prv_pe_rii_state_t* 
 
     ee_prv_pe_export_directory_entry_t dir_entry = { 0 };
     ee_prv_pe_export_directory_info_t dir_info = { 0 };
-    ee_size_t export_index = 0;
+    ee_size_t symbol_index = 0;
 
     ee_pe_error_t err = EE_PE_FAILURE;
 
@@ -751,14 +875,18 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_exports(ee_prv_pe_rii_state_t* 
     if (dir_entry.number_of_functions >= EE_PRV_PE_LIMIT_MAX_EXPORTED_SYMBOLS)
         return EE_PE_PREDEFINED_LIMIT_REACHED;
 
-    state->exports = (ee_pe_symbol_info_t*)cbs->calloc(dir_entry.number_of_names, sizeof(ee_pe_symbol_info_t));
+    if (dir_entry.number_of_names > dir_entry.number_of_functions)
+        return EE_PE_MALFORMED_FILE;
+    
+    state->exports = (ee_pe_symbol_info_t*)cbs->calloc(dir_entry.number_of_functions, sizeof(ee_pe_symbol_info_t));
     if (!state->exports)
         return EE_PE_BAD_ALLOC;
 
-    state->num_exports = dir_entry.number_of_names;
+    state->num_exports = dir_entry.number_of_functions;
 
     dir_info.ordinal_base = dir_entry.base;
     dir_info.num_addr_table_entries = dir_entry.number_of_functions;
+    dir_info.num_names_and_ordinals = dir_entry.number_of_names;
 
     if (!ee_prv_pe_rii_state_lookup_fp_by_rva(state, dir_entry.address_of_functions, &dir_info.addr_table_fp))
         return EE_PE_MALFORMED_FILE;
@@ -769,14 +897,23 @@ static ee_pe_error_t ee_prv_pe_rii_state_collect_exports(ee_prv_pe_rii_state_t* 
     if (!ee_prv_pe_rii_state_lookup_fp_by_rva(state, dir_entry.address_of_name_ordinals, &dir_info.ordinal_table_fp))
         return EE_PE_MALFORMED_FILE;
 
-    for (; export_index != state->num_exports; ++export_index) {
+    /* Step 1: Collect named exports. */
+    for (; symbol_index != dir_entry.number_of_names; ++symbol_index) {
 
-        err = ee_prv_pe_rii_state_collect_exported_symbol_info(state, &dir_info, export_index, &state->exports[export_index]);
+        err = ee_prv_pe_rii_state_collect_export_with_name(state, &dir_info, symbol_index);
         if (err != EE_PE_SUCCESS)
             return err;
     }
 
-    return EE_PE_SUCCESS;
+    /* Step 2: Collect ordinal exports. */
+    for (symbol_index = 0; symbol_index != dir_entry.number_of_functions; ++symbol_index) {
+
+        err = ee_prv_pe_rii_state_collect_export_with_ordinal(state, &dir_info, symbol_index);
+        if (err != EE_PE_SUCCESS)
+            return err;
+    }
+
+    return ee_prv_pe_rii_state_crop_exports(state);
 }
 
 static ee_pe_machine_type_t ee_prv_pe_raw_machine_value_to_machine_type(ee_uint16_t val) {
@@ -819,9 +956,7 @@ ee_pe_error_t ee_pe_read_image_info(const ee_pe_rii_callbacks_t* callbacks, ee_p
     ee_prv_pe_rii_state_collect_sections(&state);
 
     /* 5) Collection entry point info. */
-    error = ee_prv_pe_rii_state_collect_entry_point_info(&state);
-    if (error != EE_PE_SUCCESS)
-        goto cleanup;
+    ee_prv_pe_rii_state_collect_entry_point_info(&state);
 
     /* 6) Collect imported symbols. */
     error = ee_prv_pe_rii_state_collect_imports(&state);
